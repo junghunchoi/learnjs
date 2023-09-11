@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>끝말잇기</title>
+</head>
+
+<body>
+<div><span id="order">1</span>번째 참가자</div>
+<div>제시어: <span id="word"></span></div>
+<input type="text">
+<button>입력</button>
+<script>
+</script>
+</body>
+<script>
+    /*
+     1. 몇명이 참가할지
+     2. 참가자 순서
+     3. 첫번째 사람이 제시어를 말함
+     4. 다음 사람이 말을 한다
+     <> 단어가 올바른가.
+     1) 맞을 경우 4를 반복한다.
+     2) 틀릴 경우 틀렷다고 표시한다
+     5. 종료
+     */
+
+    const number = Number(prompt('몇 명이 참가?'))
+    const $button = document.querySelector('button')
+    const $input = document.querySelector('input')
+    const $word = document.querySelector('#word')
+    const $order = document.querySelector('#order')
+    let word; // 제시어
+    let newWord;
+
+    const onClickButton = () => {
+        if (!word) { // 제시어가 비어있을 때
+            word = newWord;
+            $word.textContent = word;
+            const order = Number($order.textContent);
+            if (order + 1 > number) {
+                $order.textContent = 1;
+            } else {
+                $order.textContent = order + 1;
+            }
+            $input.value = '';
+            $input.focus();
+        } else {
+            if (word[word.length - 1] === newWord[0]) { // 입력한 단어가 올바를 경우
+                word = newWord;
+                $word.textContent = word;
+                const order = Number($order.textContent);
+
+                if (order + 1 > number) {
+                    $order.textContent = 1;
+                } else {
+                    $order.textContent = order + 1;
+                }
+                $input.value = '';
+                $input.focus();
+            } else {
+                alert('올바르지 않은 단어입니다.')
+                $input.value = '';
+                $input.focus();
+            }
+        }
+    }
+    const onInput = (event) => {
+        newWord = event.target.value; // 입력한 단어를 현재단어로
+    }
+
+    $button.addEventListener('click', onClickButton);
+    $input.addEventListener('input', onInput);
+
+    /*
+    아래와 같이 로직을 줄일 수 있다.
+        const number = Number(prompt('몇 명이 참가하나요?'));
+  const $button = document.querySelector('button');
+  const $input = document.querySelector('input');
+  const $word = document.querySelector('#word');
+  const $order = document.querySelector('#order');
+  let word; // 제시어
+  let newWord; // 현재 단어
+  const onClickButton = () => {
+    if (!word || word[word.length - 1] === newWord[0]) { // 제시어가 비어 있거나 올바른 단어인가?
+      word = newWord; // 입력한 단어가 제시어가 된다.
+      $word.textContent = word; // 화면에 제시어 표시
+      const order = Number($order.textContent);
+      if (order + 1 > number) {
+        $order.textContent = 1;
+      } else {
+        $order.textContent = order + 1;
+      }
+    } else { // 올바르지 않다.
+        alert('올바르지 않은 단어입니다!');
+    }
+    $input.value = '';
+    $input.focus();
+  };
+
+  const onInput = (event) => {
+    newWord = event.target.value; // 입력한 단어를 현재 단어로
+  };
+
+  $button.addEventListener('click', onClickButton);
+  $input.addEventListener('input', onInput);
+
+
+  !! 위의 코드를 완성해봤다면 쿵쿵따도 한번 만들어보자
+  //https://thebook.io/080270/0551/
+     */
+</script>
+</html>
