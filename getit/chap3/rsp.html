@@ -1,0 +1,61 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>가위바위보</title>
+    <style>
+        #computer {
+            width: 142px;
+            height: 200px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="computer"></div>
+<div>
+    <button id="scissors" class="btn">가위</button>
+    <button id="rock" class="btn">바위</button>
+    <button id="paper" class="btn">보</button>
+</div>
+<div id="score">0</div>
+<script>
+    const $computer = document.querySelector('#computer');
+    const $score = document.querySelector('#score');
+    const $rock = document.querySelector('#rock');
+    const $scissors = document.querySelector('#scissors');
+    const $paper = document.querySelector('#paper');
+    const IMG_URL = './rsp.png';
+    $computer.style.backgroundSize = 'auto 200px';
+
+    const rspx = {
+        scissors: '0',
+        rock: '-220px',
+        paper: '-440px'
+    };
+
+    let computerChoice = 'scissors';
+    const chageComputerHand = () => {
+        if (computerChoice == 'rock') {
+            computerChoice = 'scissors';
+        } else if (computerChoice == 'scissors') {
+            computerChoice = 'paper'
+        } else if (computerChoice == 'paper') {
+            computerChoice = 'rock'
+        }
+        $computer.style.background = `url(${IMG_URL}) ${rspx[computerChoice]} 0`;
+        $computer.style.backgroundSize = 'auto 200px';
+        setInterval(chageComputerHand,50)
+    };
+
+    let intervalId = setInterval(chageComputerHand, 50);
+    const clickButton = () => {
+        clearInterval(intervalId);
+
+        setTimeout(() => {
+            intervalId = setInterval(chageComputerHand, 50);
+        },1000);
+    };
+
+</script>
+</body>
+</html>
