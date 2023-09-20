@@ -19,6 +19,7 @@ score = 100
 
 console.log(score);
 console.log(copy);
+
 //----
 
 let score = 80;
@@ -50,7 +51,7 @@ console.log(c2.x === o.x); // false -> 얕은 복사는 중첩된 객체의 참�
 //------
 const v = 1;
 
-// 원시값을 다른 변수에 할당하는 것을 깊은 복사
+// 원시값을 다른 변수에 할당하는 것은 깊은 복사
 const v1 = v;
 console.log(c1 === v); // true
 
