@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <title>틱택토</title>
     <style>
         table {
@@ -18,44 +18,59 @@
 </head>
 
 <body>
+<!-- <table>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table> -->
 <script>
-    const {body} = document; // 객체 내부의 속성과 할당하는 변수명이 같을 때 코드를 줄일 수 있다.
+    const { body } = document;
+
     const $table = document.createElement('table');
     const $result = document.createElement('div');
     const rows = [];
     let turn = 'O';
 
+    // [
+    //   [td, td, td],
+    //   [td, td, td],
+    //   [td, td, td],
+    // ]
+
     const checkWinner = (target) => {
-        //
         const rowIndex = target.parentNode.rowIndex;
         const cellIndex = target.cellIndex;
-        // rows.forEach((row, ri) => {
-        //     row.forEach((cell, ci) => {
-        //         if (cell === target) {
-        //             rowIndex = ri;
-        //             cellIndex = ci;
-        //         }
-        //     })
-        // })
-        let hasWinner = false;
 
-        //가로줄 검사
+        // 세 칸 다 채워졌나?
+        let hasWinner = false;
+        // 가로줄 검사
         if (
             rows[rowIndex][0].textContent === turn &&
             rows[rowIndex][1].textContent === turn &&
             rows[rowIndex][2].textContent === turn
         ) {
             hasWinner = true;
-    }
-        //세로줄 검사
+        }
+        // 세로줄 검사
         if (
-            rows[0][cellIndex].textContent   === turn &&
+            rows[0][cellIndex].textContent === turn &&
             rows[1][cellIndex].textContent === turn &&
             rows[2][cellIndex].textContent === turn
         ) {
             hasWinner = true;
         }
-
         // 대각선 검사
         if (
             rows[0][0].textContent === turn &&
@@ -64,7 +79,6 @@
         ) {
             hasWinner = true;
         }
-
         if (
             rows[0][2].textContent === turn &&
             rows[1][1].textContent === turn &&
@@ -75,38 +89,45 @@
         return hasWinner;
     };
 
-    const callback = (event) => {
-        if (event.target.textContent !== '') {
-            console.log('빈칸이 아닙니다.');
-        } else {
-            console.log('빈칸입니다.');
-            event.target.textContent = turn;
-            const hasWinner = checkWinner(event.target);
 
-            if (hasWinner) {
-                $result.textContent = `${turn}님이 승리!`
-                $table.removeEventListener('click', callback);
-                return;
-            }
-            turn = turn === 'X' ? 'O' : 'X';
+    const callback = (event) => {
+        if (event.target.textContent !== '') { // 칸이 이미 채워져 있는가?
+            console.log('빈칸이 아닙니다.');
+            return;
         }
+        // 빈칸이면
+        console.log('빈칸입니다');
+        event.target.textContent = turn;
+        // 승부 판단하기
+        const hasWinner = checkWinner(event.target);
+        if (hasWinner) {
+            $result.textContent = `${turn}님이 승리!`;
+            $table.removeEventListener('click', callback);
+            return;
+        }
+        // 무승부 검사
+        const draw = rows.flat().every((cell) => cell.textContent);
+        if (draw) {
+            $result.textContent = `무승부`;
+            return;
+        }
+        turn = turn === 'X' ? 'O' : 'X';
     };
 
-    for (let i = 0; i < 3; i++) {
-        const $tr = document.createElement("tr");
+    for (let i = 1; i <= 3; i++) {
+        const $tr = document.createElement('tr');
         const cells = [];
-        for (let j = 0; j < 3; j++) {
-            const $td = document.createElement("td");
-
+        for (let j = 1; j <= 3; j++) {
+            const $td = document.createElement('td');
             cells.push($td);
-            $tr.appendChild($td);
+            $tr.append($td);
         }
         rows.push(cells);
-        $table.appendChild($tr);
-        $table.addEventListener('click', callback);
+        $table.append($tr);
     }
-    body.appendChild($table);
-    body.appendChild($result);
+    $table.addEventListener('click', callback);
+    body.append($table);
+    body.append($result);
 </script>
 </body>
 </html>
