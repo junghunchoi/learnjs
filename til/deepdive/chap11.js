@@ -2,7 +2,7 @@
 const o = {};
 
 // const 키워드를 사용해 선언한 변수에 하당한 원시 값은 변경할 수 없다.
-// 하지만 const키워드를 사용해 선어한 변수에 할당한 객체는 변경할 수 있다.
+// 하지만 const키워드를 사용해 선언한 변수에 할당한 객체는 변경할 수 있다.
 o.a = 1;
 console.log(o); // {a:1}
 // -> 원시 값은 변경이 불가능한 읽기 전용 값으로 데이터의 신뢰성을 보장한다.
@@ -41,7 +41,7 @@ const c1 = {...o}; // 스프레드 문법 , 얕은 복사
 console.log(c1 === o); // false
 console.log(c1.x === o.x); // true
 
-//lodash의 clonedeep을 사용한 깊은 복사
+//lodash(라이브러리)의 clonedeep을 사용한 깊은 복사
 const _ = require('lodash');
 const c2 = _.cloneDeep(o); // 깊은 복사
 console.log(c2 === 0); // false
@@ -62,6 +62,7 @@ const c2 = o;
 console.log(c2 === o); // true
 
 //----
+
 //여러개의 식별자가 하나의 객체를 공유할 수 있다는 것이 무엇을 의미하는지 어떤 부작용이 발생할까
 
 var person = {

@@ -32,7 +32,7 @@ const circle2 = {
 // 위와 같이 프로퍼티 구조가 동일 함에도 매번 같은 프로퍼티나 메서드를 기술해야한다.
 // 만들어야하는 객체가 무수히 많아질 경우 문제가 크다.
 
-// 3) 생성자 함수에 의한 객체 생성 방식의 장점
+// 3) 생성자 함수에 의한 객체 생성 방식의 장점 -> 재활용이 가능하다.
 function Circle(radius) {
     this.radius = radius;
     this.getDiameter = function () {
