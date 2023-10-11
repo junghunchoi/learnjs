@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>계산기</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            #result {
+                width: 180px;
+                height: 50px;
+                margin: 5px;
+                text-align: right;
+            }
+
+            #process {
+                width: 180px;
+                height: 50px;
+                margin: 5px;
+                text-align: right;
+            }
+
+            .history {
+                width: 180px;
+                height: 400px;
+                margin: 5px;
+                border: 1px solid black;
+                text-align: center;
+            }
+
+            button {
+                width: 65px;
+                height: 65px;
+                margin: 5px;
+            }
+
+            .align {
+                display: flex;
+                flex-direction: column;
+                
+            }
+
+            .hor{
+                display: flex;
+                flex-direction: row;
+            }
+        </style>
+    </head>
+
+    <!--계산기버튼구현-->
+    <body>
+        <button onclick="copyHtml()">계산기 추가</button>
+        <div class ="hor">
+            <div class="align">
+                <input readonly id="process" />
+                <input readonly id="result" />
+                <div class="history"></div>
+    
+                <div class="row">
+                    <button onclick="removeCurrentValue()">C</button>
+                    <button onclick="removeAllValue()">AC</button>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+
+        /*
+        1. input 태그들 id 또는 class 수정하여 클론
+        2. 클릭한 인풋에만 키보드 입력할 수 있도록 작업
+        3. 로컬 스토리지 구분하여 저장할 수 있도록 배열 또는 로직 수정
+        */
+        let numOne = '';
+        let operator = '';
+        let numTwo = '';
+        let count = 0;
+        const historyArr = [];
+        const $process = document.querySelector('#process');
+        const $result = document.querySelector('#result');
+        const $history = document.querySelector('.history');
+        const $align = document.querySelector('.align');
+        const $hor = document.querySelector('.hor')
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === '=' || (event.key === 'Enter' && numTwo)) {
+                calculate(event);
+                return;
+            }
+
+            if (!operator || (operator && numOne) || event.key === 'Backspace') {
+                setNumber(event);
+            }
+
+            if (isNumber(numOne) && isOperator(event.key)) {
+                setOperator(event);
+            }
+        });
+
+        const setNumber = (event) => {
+            if ($result.value === 'err') {
+                $result.value = '';
+            }
+
+            if (event.key === '-' || event.key === '.' || isNumber(event.key)) {
+                if (operator) {
+                    numTwo += event.key;
+                    $result.value += event.key;
+                    return;
+                }
+
+                numOne += event.key;
+                $result.value += event.key;
+            }
+
+            if (event.key === 'Backspace' && $result.value.length === 1) {
+                $result.value = '';
+            } else if (event.key === 'Backspace' && $result.value.length !== 1) {
+                $result.value = $result.value.substring(0, $result.value.length - 1);
+            }
+        };
+
+        const setOperator = (event) => {
+            if (numOne && isOperator(event.key)) {
+                operator = event.key;
+                $process.value = $result.value + operator;
+            }
+            $result.value = '';
+        };
+
+        const calculate = (event) => {
+            if (numTwo) {
+                switch (operator) {
+                    case '+':
+                        $result.value = parseFloat(numOne) + parseFloat(numTwo);
+                        break;
+                    case '-':
+                        $result.value = parseFloat(numOne) - parseFloat(numTwo);
+                        break;
+                    case '*':
+                        $result.value = parseFloat(numOne) * parseFloat(numTwo);
+                        break;
+                    case '/':
+                        if (numTwo === '0') {
+                            $result.value = 'err';
+                            break;
+                        }
+                        $result.value = parseFloat(numOne) / parseFloat(numTwo);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // history에 저장
+            makeHistory(numOne, operator, numTwo, $result.value);
+
+            $process.value = '';
+            numOne = $result.value === 'err' ? '' : $result.value;
+            numTwo = '';
+            operator = '';
+        };
+
+        const isNumber = (number) => {
+            return !isNaN(number);
+        };
+
+        const isOperator = (op) => {
+            if (op === '+' || op === '-' || op === '*' || op === '/') return true;
+        };
+
+        const makeHistory = (numOne, operator, numTwo, result) => {
+            const $line = document.createElement('div');
+            $line.textContent = numOne + ' ' + operator + ' ' + numTwo + ' = ' + result;
+            $history.appendChild($line);
+
+            // localstorage 저장 시작
+            historyArr.push($line.textContent);
+            const arrString = JSON.stringify(historyArr);
+
+            window.localStorage.setItem('history', arrString);
+        };
+
+        const removeCurrentValue = () => {
+            $result.value = '';
+        };
+
+        const removeAllValue = () => {
+            $process.value = '';
+            $result.value = '';
+            numOne = '';
+            numTwo = '';
+            operator = '';
+            $history.innerHTML = '';
+            window.localStorage.removeItem('history');
+        };
+
+        const copyHtml = () => {
+            const cloneDiv = $align.cloneNode(true);
+
+            $hor.appendChild(cloneDiv);
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const histortyStr = window.localStorage.getItem('history');
+            const stringToJson = JSON.parse(histortyStr);
+
+            for (key in stringToJson) {
+                const $line = document.createElement('div');
+                $line.textContent = stringToJson[key];
+                $history.appendChild($line);
+                historyArr.push(stringToJson[key]);
+            }
+        });
+
+        console.log(event.currentTarget);
+        
+    </script>
+</html>

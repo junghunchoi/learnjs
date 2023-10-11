@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>계산기</title>
+</head>
+<body>
+  <h1>간단한 계산기</h1>
+  
+  <input type="text" id="display" disabled>
+  <br>
+  <button onclick="addToDisplay('1')">1</button>
+  <button onclick="addToDisplay('2')">2</button>
+  <!-- 다른 숫자 버튼들 추가 -->
+  <button onclick="calculate()">=</button>
+  
+  <script>
+    // 화면에 숫자 추가
+    function addToDisplay(value) {
+      document.getElementById('display').value += value;
+    }
+    
+    // 계산 실행
+    function calculate() {
+      const expression = document.getElementById('display').value;
+      const result = eval(expression); // eval 함수를 사용하여 계산
+
+      // 결과를 로컬 스토리지에 저장
+      localStorage.setItem('calculatorResult', result);
+
+      // 결과를 화면에 표시
+      document.getElementById('display').value = result;
+    }
+
+    // 페이지가 로드될 때 이전 결과를 가져와 화면에 표시
+    window.onload = function() {
+      const previousResult = localStorage.getItem('calculatorResult');
+      if (previousResult) {
+        document.getElementById('display').value = previousResult;
+      }
+    }
+  </script>
+</body>
+</html>
