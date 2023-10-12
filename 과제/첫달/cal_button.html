@@ -63,14 +63,19 @@
 
       if (value === "=" || (value === "Enter" && numTwo)) {
         calculate(value, calculateId);
+        console.log("calculate")
         return;
       }
+
+      // !! 연산자 넣을 때 분기 타는거 조치해야함.
       if (!operator || (operator && numOne) || value === "Backspace") {
         setNumber(value, calculateId);
+        console.log("setNumber")
       }
 
       if (isNumber(numOne) && isOperator(value)) {
         setOperator(value, calculateId);
+        console.log("setOperator")
       }
     });
 
