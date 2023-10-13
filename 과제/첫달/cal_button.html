@@ -38,83 +38,80 @@
 
 <!-- 계산기 버튼 구현 -->
 <body>
-  <button style="width: 60px; height: 60px" onclick="copyHtml()">
-    계산기 추가
-  </button>
+  <button style="width: 60px; height: 60px" onclick="copyHtml()">계산기 추가</button>
   <div class="hor"></div>
   <script>
-    let numOne = "";
-    let operator = "";
-    let numTwo = "";
     let count = 0;
     let cloneCount = 1;
     const map = new Map();
 
-    const buttons = document.querySelector("button");
     const $hor = document.querySelector(".hor");
 
-    window.addEventListener("click", (event) => {
+    const clickEventListener = (event) => {
       const value = event.target.innerHTML;
-      const calculateId = parseInt(event.target.id[event.target.id.length - 1]);
-      const getValue = Object.values(map.get(calculateId));
-      let numOne = getValue[0];
-      let numTwo = getValue[1];
-      let operator = getValue[2];
-
-      if (value === "=" || (value === "Enter" && numTwo)) {
-        calculate(value, calculateId);
-        console.log("calculate")
-        return;
-      }
-
-      // !! 연산자 넣을 때 분기 타는거 조치해야함.
-      if (!operator || (operator && numOne) || value === "Backspace") {
-        setNumber(value, calculateId);
-        console.log("setNumber")
-      }
+      const calculateId = getCalculateId(event.target.id);
+      const [numOne, numTwo, operator] = Object.values(map.get(calculateId));
 
       if (isNumber(numOne) && isOperator(value)) {
         setOperator(value, calculateId);
-        console.log("setOperator")
+        return;
       }
-    });
+
+      if (!operator || (operator && numOne)) {
+        setNumber(value, calculateId);
+      }
+
+      if (value === "=" && isNumber(numTwo)) {
+        calculate(value, calculateId);
+      }
+    };
 
     const setNumber = (value, calculateId) => {
       const $result = document.querySelector(`#result_clone${calculateId}`);
       const getObject = map.get(calculateId);
-      const getValue = Object.values(map.get(calculateId));
-      let numOne = getValue[0];
-      let numTwo = getValue[1];
-      let operator = getValue[2];
+      const [numOne, , operator] = Object.values(getObject);
 
       if ($result.value === "err") {
         $result.value = "";
       }
 
-      if (value === "-" || value === "." || isNumber(value)) {
-        if (operator) {
-          
-          $result.value += value;
-          getValue[1] += $result.value;
-          return;
-        }
-
-        $result.value += value;
-        getValue[0] += $result.value;
+      if ($result.value.includes(".") && value === ".") {
+        return;
       }
 
-      console.log(getValue);
+      if (value === "-" || value === "." || isNumber(value)) {
+        if ($result.value === "") {
+          $result.value = value === "." ? "0." : value;
+        } else if ($result.value === "0" && (value === "-" || isNumber(value))) {
+          $result.value = value;
+        } else {
+          $result.value += value;
+        }
+
+        if (isOperator(operator)) {
+          getObject.numTwo = $result.value;
+        } else {
+          getObject.numOne = $result.value;
+        }
+        map.set(calculateId, getObject);
+      }
     };
 
     const setOperator = (value, calculateId) => {
       const $process = document.querySelector(`#process_clone${calculateId}`);
       const $result = document.querySelector(`#result_clone${calculateId}`);
-      const getValue = Object.values(map.get(calculateId));
-      console.log(map);
-      let numOne = getValue[0];
-      if (numOne) {
-        getValue[2] = value;
+      const getObject = map.get(calculateId);
+      const [numOne, numTwo] = Object.values(map.get(calculateId));
+
+      if (!isNumber(numTwo) && $result.value === "") {
+        return;
+      }
+
+      if (isNumber(numOne)) {
+        getObject.numOne = $result.value;
+        getObject.operator = value;
         $process.value = $result.value + value;
+        map.set(calculateId, getObject);
       }
       $result.value = "";
     };
@@ -123,94 +120,123 @@
       const $process = document.querySelector(`#process_clone${calculateId}`);
       const $result = document.querySelector(`#result_clone${calculateId}`);
       const getObject = map.get(calculateId);
-      const getValue = Object.values(map.get(calculateId));
-      let numOne = getValue[0];
-      let numTwo = getValue[1];
-      let operator = getValue[2];
+      const [numOne, numTwo, operator] = Object.values(getObject);
 
-      if (numTwo) {
+      if (isOperator(operator)) {
         switch (operator) {
           case "+":
-            $result.value = parseFloat(numOne) + parseFloat(numTwo);
+            $result.value = +(parseFloat(numOne) + parseFloat(numTwo)).toFixed(12);
             break;
           case "-":
-            $result.value = parseFloat(numOne) - parseFloat(numTwo);
+            $result.value = +(parseFloat(numOne) - parseFloat(numTwo)).toFixed(12);
             break;
-          case "*":
-            $result.value = parseFloat(numOne) * parseFloat(numTwo);
+          case "x":
+            $result.value = +(parseFloat(numOne) * parseFloat(numTwo)).toFixed(12);
             break;
           case "/":
             if (numTwo === "0") {
               $result.value = "err";
               break;
             }
-            $result.value = parseFloat(numOne) / parseFloat(numTwo);
+            $result.value = +(parseFloat(numOne) / parseFloat(numTwo)).toFixed(12);
             break;
           default:
             break;
         }
+
+        makeHistory(numOne, operator, numTwo, $result.value, calculateId);
+
+        $process.value = "";
+        getObject.numOne = $result.value === "err" ? "" : $result.value;
+        getObject.numTwo = "";
+        getObject.operator = "";
+
+        map.set(calculateId, getObject);
       }
-
-      // history에 저장
-      makeHistory(numOne, operator, numTwo, $result.value, calculateId);
-
-      $process.value = "";
-      getObject.numOne = $result.value === "err" ? "" : $result.value;
-      getObject.numTwo = "";
-      getObject.operator = "";
     };
 
     const isNumber = (number) => {
-      return !isNaN(number);
+      return !isNaN(number) && number !== "";
     };
 
     const isOperator = (op) => {
-      if (op === "+" || op === "-" || op === "*" || op === "/") return true;
+      if (op === "+" || op === "-" || op === "x" || op === "/") return true;
     };
 
     const makeHistory = (numOne, operator, numTwo, result, calculateId) => {
       const $history = document.querySelector(`#history_clone${calculateId}`);
       const $line = document.createElement("div");
-      $line.textContent =
-        numOne + " " + operator + " " + numTwo + " = " + result;
+      const getObject = map.get(calculateId);
+      $line.textContent = numOne + " " + operator + " " + numTwo + " = " + result;
       $history.appendChild($line);
 
-      // localstorage 저장 시작
-      Object.value(calculateId).push($line.textContent);
-      const arrString = JSON.stringify(historyArr);
+      getObject.historyArr.push($line.textContent);
+      const historyArrToJson = JSON.stringify(getObject.historyArr);
 
-      window.localStorage.setItem("cal" + calculateId, arrString);
+      window.localStorage.setItem(calculateId, historyArrToJson);
     };
 
     const removeCurrentValue = (event) => {
-      const calculateId = parseInt(event.target.id[event.target.id.length - 1]);
+      const calculateId = getCalculateId(event.target.id);
       const $result = document.querySelector(`#result_clone${calculateId}`);
-      $result.value = "";
+      const getObject = map.get(calculateId);
+      $result.value = "0";
+      getObject.numOne = "";
+      map.set(calculateId, getObject);
     };
 
     const removeLastValue = (event) => {
-      const calculateId = parseInt(event.target.id[event.target.id.length - 1]);
+      const calculateId = getCalculateId(event.target.id);
       const $result = document.querySelector(`#result_clone${calculateId}`);
+      const getObject = map.get(calculateId);
+      const [, , operator] = Object.values(getObject);
 
       if ($result.value.length === 1) {
-        $result.value = "";
+        if (!isOperator(operator)) {
+          getObject.numOne = "";
+        }
+        $result.value = "0";
+      } else {
+        $result.value = $result.value.substring(0, $result.value.length - 1);
+      }
+    };
+
+    const backspace = (event) => {
+      const calculateId = getCalculateId(event.target.id);
+      const $result = document.querySelector(`#result_clone${calculateId}`);
+      const getObject = map.get(calculateId);
+      const [numOne, , operator] = Object.values(getObject);
+
+      if (numOne && event.target.value === "⌫") {
+        return;
+      }
+
+      if ($result.value.length === 1) {
+        if (!isOperator(operator)) {
+          getObject.numOne = "";
+        }
+        $result.value = "0";
+
+        map.set(calculateId, getObject);
       } else {
         $result.value = $result.value.substring(0, $result.value.length - 1);
       }
     };
 
     const removeAllValue = (event) => {
-      const calculateId = parseInt(event.target.id[event.target.id.length - 1]);
+      const calculateId = getCalculateId(event.target.id);
       const $process = document.querySelector(`#process_clone${calculateId}`);
       const $result = document.querySelector(`#result_clone${calculateId}`);
       const $history = document.querySelector(`#history_clone${calculateId}`);
+      const getObject = map.get(calculateId);
       $process.value = "";
-      $result.value = "";
-      numOne = "";
-      numTwo = "";
-      operator = "";
+      $result.value = "0";
+      getObject.numOne = "";
+      getObject.numTwo = "";
+      getObject.operator = "";
+      map.set(calculateId, getObject);
       $history.innerHTML = "";
-      window.localStorage.removeItem("history");
+      window.localStorage.removeItem(calculateId);
     };
 
     const copyHtml = () => {
@@ -219,36 +245,36 @@
         <div class="hor">
             <div class="align">
             <input readonly      class = "process" />
-            <input type="number" class = "result" />
+            <input class = "result" value = "0"/>
             <div class="row">
                 <button class = "ce"id="ce" onclick="removeCurrentValue(event)">CE</button>
                 <button class = "clear"id="clear" onclick="removeLastValue(event)">C</button>
                 <button class = "ac"id="ac" onclick="removeAllValue(event)">AC</button>
-                <button class = "backsapce"id="backsapce" onclick="removeLastValue(event)">⌫</button>
+                <button class = "backsapce"id="backsapce" onclick="backspace(event)">⌫</button>
             </div>
             <div class="row">
-                <button class="num-7" id="num-7">7</button>
-                <button class="num-8" id="num-8">8</button>
-                <button class="num-9" id="num-9">9</button>
-                <button class="plus"  id="plus">+</button>
+                <button class="num-7" id="num-7" onclick = "clickEventListener(event)">7</button>
+                <button class="num-8" id="num-8" onclick = "clickEventListener(event)">8</button>
+                <button class="num-9" id="num-9" onclick = "clickEventListener(event)">9</button>
+                <button class="plus"  id="plus"  onclick = "clickEventListener(event)">+</button>
             </div>
             <div class="row">
-                <button class="num-4" id="num-4">4</button>
-                <button class="num-5" id="num-5">5</button>
-                <button class="num-6" id="num-6">6</button>
-                <button class="minus" id="minus">-</button>
+                <button class="num-4" id="num-4" onclick = "clickEventListener(event)">4</button>
+                <button class="num-5" id="num-5" onclick = "clickEventListener(event)">5</button>
+                <button class="num-6" id="num-6" onclick = "clickEventListener(event)">6</button>
+                <button class="minus" id="minus" onclick = "clickEventListener(event)">-</button>
             </div>
             <div class="row">
-                <button class ="num-1"  id="num-1">1</button>
-                <button class ="num-2"  id="num-2">2</button>
-                <button class ="num-3"  id="num-3">3</button>
-                <button class ="divide"  id="divide">/</button>
+                <button class ="num-1"   id="num-1"  onclick = "clickEventListener(event)">1</button>
+                <button class ="num-2"   id="num-2"  onclick = "clickEventListener(event)">2</button>
+                <button class ="num-3"   id="num-3"  onclick = "clickEventListener(event)">3</button>
+                <button class ="divide"  id="divide" onclick = "clickEventListener(event)">/</button>
             </div>
             <div class="row">
-                <button class="comma" id="comma">.</button>
-                <button class="num-0" id="num-0">0</button>
-                <button class="calculate" id="calculate">=</button>
-                <button class="multiply" id="multiply">x</button>
+                <button onclick = "clickEventListener(event)" class="comma" id="comma">.</button>
+                <button onclick = "clickEventListener(event)" class="num-0" id="num-0">0</button>
+                <button onclick = "clickEventListener(event)" class="calculate" id="calculate">=</button>
+                <button onclick = "clickEventListener(event)" class="multiply" id="multiply">x</button>
             </div>
             </div>
             <div class="history"></div>
@@ -260,24 +286,43 @@
 
       $hor.appendChild(makeDiv);
 
-      const jsonObject = new Object();
-      jsonObject.numOne = "";
-      jsonObject.numTwo = "";
-      jsonObject.operator = "";
-      jsonObject.historyArr = [];
+      const calObject = {
+        numOne: "",
+        numTwo: "",
+        operator: "",
+        historyArr: [],
+      };
 
-      map.set(cloneCount, jsonObject);
+      map.set(cloneCount, calObject);
 
+      loadDataFromLocalStorage(cloneCount);
       cloneCount++;
     };
 
     function visitAllNodes(node, callback) {
       if (node && node.nodeType === 1) {
-        callback(node); // 현재 노드에 대해 콜백 함수 실행
+        callback(node);
         for (let i = 0; i < node.childNodes.length; i++) {
-          visitAllNodes(node.childNodes[i], callback); // 재귀적으로 자식 노드 방문
+          visitAllNodes(node.childNodes[i], callback);
         }
       }
     }
+
+    const loadDataFromLocalStorage = (calculateId) => {
+      const value = localStorage.getItem(calculateId);
+      const $history = document.querySelector(`#history_clone${calculateId}`);
+
+      const valueToJson = JSON.parse(value);
+
+      for (key in valueToJson) {
+        const $line = document.createElement("div");
+        $line.textContent = valueToJson[key];
+        $history.appendChild($line);
+      }
+    };
+
+    const getCalculateId = (id) => {
+      return parseInt(id[id.length - 1]);
+    };
   </script>
 </body>
