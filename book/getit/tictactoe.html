@@ -39,6 +39,7 @@
     // 구조분해할당
     //
     const { body } = document;
+    console.log(body);
 
     const $table = document.createElement('table');
     const $result = document.createElement('div');
@@ -130,6 +131,9 @@
     $table.addEventListener('click', callback);
     body.append($table);
     body.append($result);
+    /*
+    내가 클릭하면 다음은 무작위로 한칸이 x처리되도록 구현.
+    */
 </script>
 </body>
 </html>
