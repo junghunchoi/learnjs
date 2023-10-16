@@ -27,7 +27,7 @@ JS에 대해 공부한 것을 정리하고 있습니다.
 
 
 1. [mdn](https://developer.mozilla.org/ko/docs/Web/JavaScript)
-2. [코딩컨벤션](https://ui.toast.com/fe-guide/ko_CODING-CONVENTION)
+~~2. [코딩컨벤션](https://ui.toast.com/fe-guide/ko_CODING-CONVENTION)~~
 3. [클린코드_js버전](https://github.com/qkraudghgh/clean-code-javascript-ko)
 4. [모던 javascrpit 튜토리얼](https://ko.javascript.info/)
 5. [코어자바스크립트](https://ko.javascript.info/js)
