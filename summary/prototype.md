@@ -1,0 +1,165 @@
+__proto__는 GETTER, SETTTER 역할을 한다.
+하지만 Object.getPrototypeOf나 Object.setPrototypeOf 의 사용을 지향한다.
+
+-------------------
+
+.__proto__을 통해서도 상속이 가능하지만
+객체내부 프로퍼를 통해서도 상속이 가능하다. ex ) __proto__: parent
+
+-------------------
+
+하나의 객체만 상속받을 수 있다.
+객체나 null만 받을 수 있으며 다른 자료형은 무시된다.
+
+-------------------
+프로퍼티를 읽을 떄만 사용해야한다.
+수정은 객체에 직접해야한다.
+
+let user = {
+    name: "John",
+    surname: "Smith",
+
+    set fullName(value) {
+      [this.name, this.surname] = value.split(" ");
+    },
+
+    get fullName() {
+      return `${this.name} ${this.surname}`;
+    }
+  };
+
+  let admin = {
+    __proto__: user,
+    isAdmin: true
+  };
+
+  console.log(admin.fullName); // John Smith (*)
+
+  // setter 함수가 실행됩니다!
+  admin.fullName = "Alice Cooper"; // (**)
+
+  console.log(admin.fullName); // Alice Cooper, setter에 의해 추가된 admin의 프로퍼티(name, surname)에서 값을 가져옴
+  console.log(user.fullName); // John Smith, 본래 user에 있었던 프로퍼티 값
+
+-------------------
+
+this는 프로토타입에 영향을 받지 않는다.
+어디서 호출 했던 언제나 .앞에 있는 객체이다.
+
+// animal엔 다양한 메서드가 있습니다.
+let animal = {
+    walk() {
+      if (!this.isSleeping) {
+        console.log(`동물이 걸어갑니다.`);
+      }
+    },
+    sleep() {
+      this.isSleeping = true;
+    }
+  };
+
+  let rabbit = {
+    name: "하얀 토끼",
+    __proto__: animal
+  };
+
+  // rabbit에 새로운 프로퍼티 isSleeping을 추가하고 그 값을 true로 변경합니다.
+  rabbit.sleep(); // rabbit -> animal -> sleep() 을 호출하므로 this는 .앞에 있는 rabbit을 가르키게 된다.
+
+  console.log(rabbit.isSleeping); // true
+  console.log(animal.isSleeping); // undefined 
+
+-------------------
+
+Object.keys는 선택한 객체의 키만 반환하지만 for in은 부모의 키까지 모두 반환한다.
+
+let animal = {
+    eats: true
+  };
+
+  let rabbit = {
+    jumps: true,
+    __proto__: animal
+  };
+
+  // Object.keys는 객체 자신의 키만 반환합니다.
+  console.log(Object.keys(rabbit)); // jumps
+
+  // for..in은 객체 자신의 키와 상속 프로퍼티의 키 모두를 순회합니다.
+  for(let prop in rabbit) console.log(prop); // jumps, eats
+
+  -------------------
+
+  방법론이긴 하나 잘못된 방법으로 코딩하면 객체가 아니라 부모의 프로퍼티 값을 할당하여
+  자식 모두가 같은 값을 공유하게 된다. 아래를 보자
+
+  let hamster = {
+    stomach: [],
+
+    eat(food) {
+      this.stomach.push(food);
+    }
+  };
+
+  let speedy = {
+    __proto__: hamster
+  };
+
+  let lazy = {
+    __proto__: hamster
+  };
+
+  speedy.eat("apple");
+  console.log( speedy.stomach ); // apple
+  console.log( lazy.stomach ); // apple
+
+  this.stomach.push(food)에서 자식이 stomach가 없기 때문에 부모의 프로퍼티를 검색하게 되고
+  결국 부모의 배열에 값을 넣게 된다.
+
+  따라서 이를 막기 위해선 객체의 배열을 새로 생성하거나 객체를 선언할 때 배열을 만들던가 해야한다.
+  1. this.stomach = [food]
+  2. let speedy = {
+        __proto__: hamster,
+        stomach: []
+        };
+
+-------------------
+
+js에서 constructor는 개발자에 의해 바뀔 수 있으며 "알맞은" 값을 보장하지 않는다.
+프로토타입을 가공하거나 생성자를 호출하여 값을 바꿔버리는 경우 기존의 생성자가
+다른생성자로 바뀌게 된다.
+
+function Rabbit(name) {
+  this.name = name;
+}let animal = {
+  eats: true
+};
+
+// 프로토타입이 animal인 새로운 객체를 생성합니다.
+let rabbit = Object.create(animal);
+
+alert(rabbit.eats); // true
+
+alert(Object.getPrototypeOf(rabbit) === animal); // true
+
+Object.setPrototypeOf(rabbit, {}); // rabbit의 프로토타입을 {}으로 바꿉니다.
+
+let rabbit = new Rabbit("흰 토끼");
+
+let rabbit2 = new rabbit.constructor("검정 토끼");
+
+console.log(rabbit.constructor ===Rabbit); // false
+
+Rabbit.prototype = {
+  jumps: true
+};
+
+let rabbit3 = new Rabbit();
+console.log(rabbit3.constructor ===Rabbit); // false
+
+원래대로 되돌리는 방법은 아래와 같다.
+
+Rabbit.prototype = {
+  jumps: true,
+  constructor: Rabbit
+};
