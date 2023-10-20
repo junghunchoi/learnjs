@@ -2,19 +2,19 @@
 //화면 그리기
 //이벤트달기
 
-class PracEditor{
-    constructor(editorName){
-        this.PracEditor = editorName
-        this.makeEditor(editorName)
-    }
+function PracEditor() {
+  var makeEditor = function (editorName) {
+    var $editorarea = document.querySelector(".editorarea")
 
-    makeEditor(editorName){
-        const 
-
-    }
-
-    addEvent(component){
-        
-    }
     
+    
+  };
+
+  var addEvent = function (component) {};
+
+  var $editorarea = document.querySelector(".editorarea")
+  
+
 }
+
+PracEditor();
