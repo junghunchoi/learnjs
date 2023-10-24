@@ -1,51 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <p id="p">Select me: <i>italic</i> and <b>bold</b></p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+      
 
-Cloned: <span id="cloned"></span>
-<br>
-As text: <span id="astext"></span>
+      <span style="font: 30px Black Han Sans"> check34567345634563546 </span>
+    </div>
+    <p id="p">Select me: <i>italic</i> and <b>bold</b></p>
 
-<script>
-  document.onselectionchange = function() {
-    // let selection = document.getSelection();
-    // // let selection1 = document.getSelection().anchorNode()
-    
-    // cloned.innerHTML = astext.innerHTML = "";
-  
-    // for (let i = 0; i < selection.rangeCount; i++) {
-    //   cloned.append(selection.getRangeAt(i).cloneContents());
-    // }
-                                             
-    // astext.innerHTML += selection;
-    // console.log(selection);
-    // // console.log(selection1);
+    Cloned: <span id="cloned"></span>
+    <br />
+    As text: <span id="astext"></span>
 
-    const selection = window.getSelection();
-    if (!selection.isCollapsed) { // 선택된 텍스트가 있는지 확인
-        let node = selection.anchorNode;
-        while (node && node.nodeType !== Node.ELEMENT_NODE) {
+    <script>
+      document.onselectionchange = function () {
+        // let selection = document.getSelection();
+        // // let selection1 = document.getSelection().anchorNode()
+
+        // cloned.innerHTML = astext.innerHTML = "";
+
+        // for (let i = 0; i < selection.rangeCount; i++) {
+        //   cloned.append(selection.getRangeAt(i).cloneContents());
+        // }
+
+        // astext.innerHTML += selection;
+        // console.log(selection);
+        // // console.log(selection1);
+
+        const selection = window.getSelection();
+        if (!selection.isCollapsed) {
+          // 선택된 텍스트가 있는지 확인
+          let node = selection.anchorNode;
+          while (node && node.nodeType !== Node.ELEMENT_NODE) {
             node = node.parentNode; // 텍스트 노드의 경우 부모 요소로 이동
-        }
+          }
 
-        if (node) {
+          if (node) {
             const selectedText = selection.toString().trim(); // 선택된 텍스트
             const fullTextOfNode = node.textContent.trim(); // 태그의 전체 텍스트
 
             if (selectedText === fullTextOfNode) {
-                console.log("전체 내용이 선택되었습니다.");
+              console.log("전체 내용이 선택되었습니다.");
             } else {
-                console.log("전체 내용이 선택되지 않았습니다.");
+              console.log("전체 내용이 선택되지 않았습니다.");
             }
+          }
         }
-    }
-  };
-</script>
-</body>
+      };
+    </script>
+  </body>
 </html>

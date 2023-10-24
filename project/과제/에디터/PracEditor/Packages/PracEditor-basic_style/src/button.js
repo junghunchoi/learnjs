@@ -65,16 +65,26 @@ var btnModule = (function () {
   function clickBtn(event) {
     var $clickedBtn = event.target.closest("button");
     var isClicked = $clickedBtn.isClicked;
+    var statusId = $clickedBtn.id
+    var statusBtn = "is"+statusId.replace("Button","")
+    var obj ={};
+    
 
     if (!isClicked) {
       $clickedBtn.isClicked = true;
       $clickedBtn.classList.add("btn-secondary");
       $clickedBtn.classList.remove("btn-light");
+      obj[statusBtn]=true;
+      updateGlobalEditorObject(obj)
     } else {
       $clickedBtn.isClicked = false;
       $clickedBtn.classList.add("btn-light");
       $clickedBtn.classList.remove("btn-secondary");
+      obj[statusBtn]=false;
+      updateGlobalEditorObject(obj)
     }
+
+    selectionModule.updateOrInsertElement(GlobalEditorObject)
   }
 
   function createButton(title, svgPath, btnId) {
@@ -96,6 +106,8 @@ var btnModule = (function () {
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", svgPath);
     svg.appendChild(path);
+
+    
 
     return buttonSpan;
   }
