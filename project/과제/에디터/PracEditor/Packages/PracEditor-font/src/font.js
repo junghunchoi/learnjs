@@ -117,6 +117,8 @@ var fontModule = (function () {
 
     obj[event.target.id.replace("Dropdown-item", "")] = event.target.textContent;
     updateGlobalEditorObject(obj);
+
+    selectionModule.updateOrInsertElement(GlobalEditorObject)
   }
 
   return {
