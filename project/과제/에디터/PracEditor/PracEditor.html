@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Editor</title>
   </head>
+  <style>
+    [contenteditable] {
+  outline: 0px solid transparent;
+}
+  </style>
   <body>
-<div>
-</div>
+    <p style="font: italic bold 20px 'Black Han Sans'; text-decoration: underline; color: red;">This is a styled paragraph.</p>
 
-    <script src="../PracEditor/Packages/PracEditor-external/externalScrpits.js"></script>
-    <script src="../PracEditor/Packages/PracEditor-external/externalLink.js"></script>
-    <script src="../PracEditor/Packages/PracEditor-basic_style/src/button.js"></script>
-    <script src="../PracEditor/Packages/PracEditor-font/src/font.js"></script>
-    <script src="../PracEditor/Packages/PracEditor-core/src/praceditor.js"></script>
-    <script> 
-    console.log(window.getSelection());
-    </script>
+    <script src="../PracEditor/Packages/PracEditor-config/externalScrpits.js"></script>
+    <script src="../PracEditor/Packages/PracEditor-config/externalLink.js"></script>
+    <script src="../PracEditor/Packages/PracEditor-config/loadscripts.js"></script>
+    <div>
+      안녕하세요
+      <span style = "font-style: italic; color: aqua; text-decoration: underline; font-weight: bold; font-size: 20px; font-family: Black Han Sans;">감사해요</span>
+      <span>잘있어요
+        <span>다시만나요</span>
+      </span>
+    </div>
+    
   </body>
 </html>
 

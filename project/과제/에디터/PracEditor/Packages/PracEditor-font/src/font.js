@@ -5,7 +5,7 @@ var fontModule = (function () {
     // 폰트 드롭다운
     const fontDropdown = createDropdown(
       "기본",
-      ["Default", "Black Han Sans", "Nanum Brush Script"],
+      ["기본", "Black Han Sans", "Nanum Brush Script"],
       "fontDropdown"
     );
     dropboxList.push(fontDropdown);
@@ -78,7 +78,7 @@ var fontModule = (function () {
 
     const dropdownButton = document.createElement("button");
     dropdownButton.className = "btn btn-light dropdown-toggle btn-sm btn-outline-dark";
-    dropdownButton.id = "fontColor";
+    dropdownButton.id = "fontColorDropdown";
     dropdownButton.type = "button";
 
     dropdownButton.setAttribute("data-bs-toggle", "dropdown");
@@ -95,7 +95,7 @@ var fontModule = (function () {
       const anchor = document.createElement("a");
       anchor.className = "dropdown-item";
       anchor.href = "#";
-      anchor.id = "fontColor-item";
+      anchor.id = "fontColorDropdown-item";
       anchor.textContent = color;
       anchor.addEventListener("click", clickDropdown);
       li.style.backgroundColor = color;
@@ -108,10 +108,17 @@ var fontModule = (function () {
 
   function clickDropdown(event) {
     var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
-    if (event.target.id === "fontColor-item") {
+    var obj = {};
+
+    if (event.target.id === "fontColorDropdown-item") {
       $parentNode.style.backgroundColor = event.target.textContent;
     }
     $parentNode.innerHTML = event.target.textContent;
+
+    obj[event.target.id.replace("Dropdown-item", "")] = event.target.textContent;
+    updateGlobalEditorObject(obj);
+
+    selectionModule.updateOrInsertElement(GlobalEditorObject)
   }
 
   return {

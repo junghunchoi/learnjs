@@ -1,25 +1,17 @@
-new Promise(function(resolve, reject) {
+function Editor(){
+    this.setting = ""
+}
 
-  setTimeout(() => resolve(1), 1000);
+Editor.prototype.make = function(){
+    console.log("화면 만들 함수를 프로토타입을 통해 추가한다.")
+}
 
-}).then(function(result) {
+var objectEdi = new Editor()
+var objectEdi2 = new Editor()
+objectEdi.setting = "수정한 setting"
 
-  console.log(result); // 1
+objectEdi.make()
 
-  return new Promise((resolve, reject) => { // (*)
-    setTimeout(() => resolve(result * 2), 1000);
-  });
+console.log(objectEdi.setting);
+console.log(objectEdi2.setting);
 
-}).then(function(result) { // (**)
-
-  console.log(result); // 2
-
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(result * 2), 1000);
-  });
-
-}).then(function(result) {
-
-  console.log(result); // 4
-
-});
