@@ -1,4 +1,4 @@
-const scripts = [
+var scripts = [
     {
       src: "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js",
       integrity: "sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM",
@@ -22,27 +22,41 @@ const scripts = [
   ];
   
 
-  function loadScript(scriptObj) {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = scriptObj.src;
-      script.integrity = scriptObj.integrity;
-      script.crossOrigin = scriptObj.crossorigin;
-      script.onload = resolve;
-      document.body.appendChild(script);
-    });
-  }
-  
+  function loadScript(scriptObj, callback) {
+    var script = document.createElement('script');
+    script.src = scriptObj.src;
+    script.integrity = scriptObj.integrity;
+    script.crossOrigin = scriptObj.crossorigin;
+    script.onload = function() {
+        callback();
+    };
+    script.onerror = function() {
+        callback(new Error("Script load error for " + scriptObj.src));
+    };
+    document.body.appendChild(script);
+}
 
-  Promise.all(scripts.map(scriptObj => loadScript(scriptObj)))
-    .then(() => {
-        
-    });
+function loadAllScripts(scripts, finalCallback) {
+    var loadedCount = 0;
+    for (var i = 0; i < scripts.length; i++) {
+        loadScript(scripts[i], function(error) {
+            if (error) {
+                finalCallback(error);
+                return;
+            }
+            loadedCount++;
+            if (loadedCount === scripts.length) {
+                finalCallback();
+            }
+        });
+    }
+}
 
+loadAllScripts(scripts, function(error) {
+    if (!error) {
+        // All scripts loaded successfully
+    } else {
+        console.error(error);
+    }
+});
 
-//   // 모든 스크립트 순차적 로딩
-//   (async function() {
-//     for (let scriptObj of scripts) {
-//       await loadScript(scriptObj);
-//     }
-//   })();

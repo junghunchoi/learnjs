@@ -5,8 +5,8 @@ var scriptList = [
     '../PracEditor/Packages/PracEditor-core/src/praceditor.js',
   ];
   
-  scriptList.forEach(src => {
-    const script = document.createElement('script');
-    script.src = src;
+  for (var i = 0; i < scriptList.length; i++) {
+    var script = document.createElement('script');
+    script.src = scriptList[i];
     document.body.appendChild(script);
-  });
+}

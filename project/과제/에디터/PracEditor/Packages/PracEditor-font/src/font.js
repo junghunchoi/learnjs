@@ -2,24 +2,21 @@ var fontModule = (function () {
   function appendDropbox() {
     var dropboxList = [];
 
-    // 폰트 드롭다운
-    const fontDropdown = createDropdown(
+    var fontDropdown = createDropdown(
       "기본",
       ["기본", "Black Han Sans", "Nanum Brush Script"],
       "fontDropdown"
     );
     dropboxList.push(fontDropdown);
 
-    // 폰트 크기 드롭다운
-    const fontSizeDropdown = createDropdown(
+    var fontSizeDropdown = createDropdown(
       "12pt",
       ["9pt", "10pt", "12pt", "14pt", "16pt", "20pt"],
       "fontSizeDropdown"
     );
     dropboxList.push(fontSizeDropdown);
 
-    // 색상 드롭다운
-    const colorDropdown = createFontColorDropdown([
+    var colorDropdown = createFontColorDropdown([
       "black",
       "blue",
       "green",
@@ -36,12 +33,12 @@ var fontModule = (function () {
   }
 
   function createDropdown(title, items, dropdownId) {
-    const dropdownSpan = document.createElement("span");
-    const dropdownDiv = document.createElement("div");
+    var dropdownSpan = document.createElement("span");
+    var dropdownDiv = document.createElement("div");
     dropdownDiv.className = "dropdown p-2";
     dropdownSpan.appendChild(dropdownDiv);
 
-    const dropdownButton = document.createElement("button");
+    var dropdownButton = document.createElement("button");
     dropdownButton.className = "btn btn-light dropdown-toggle btn-sm btn-outline-dark";
     dropdownButton.id = dropdownId;
     dropdownButton.type = "button";
@@ -51,13 +48,13 @@ var fontModule = (function () {
     dropdownButton.textContent = title;
     dropdownDiv.appendChild(dropdownButton);
 
-    const dropdownMenu = document.createElement("ul");
+    var dropdownMenu = document.createElement("ul");
     dropdownMenu.className = "dropdown-menu";
     dropdownDiv.appendChild(dropdownMenu);
 
-    items.forEach((item) => {
-      const listItem = document.createElement("li");
-      const anchor = document.createElement("a");
+    items.forEach(function(item) {
+      var listItem = document.createElement("li");
+      var anchor = document.createElement("a");
       anchor.className = "dropdown-item";
       anchor.href = "#";
       anchor.textContent = item;
@@ -71,14 +68,14 @@ var fontModule = (function () {
   }
 
   function createFontColorDropdown(colors) {
-    const dropdownSpan = document.createElement("span");
-    const dropdownDiv = document.createElement("div");
+    var dropdownSpan = document.createElement("span");
+    var dropdownDiv = document.createElement("div");
     dropdownDiv.className = "dropdown p-2";
     dropdownSpan.appendChild(dropdownDiv);
 
-    const dropdownButton = document.createElement("button");
+    var dropdownButton = document.createElement("button");
     dropdownButton.className = "btn btn-light dropdown-toggle btn-sm btn-outline-dark";
-    dropdownButton.id = "fontColorDropdown";
+    dropdownButton.id = "colorDropdown";
     dropdownButton.type = "button";
 
     dropdownButton.setAttribute("data-bs-toggle", "dropdown");
@@ -86,19 +83,19 @@ var fontModule = (function () {
     dropdownButton.textContent = "black";
     dropdownDiv.appendChild(dropdownButton);
 
-    const dropdownMenu = document.createElement("ul");
+    var dropdownMenu = document.createElement("ul");
     dropdownMenu.className = "dropdown-menu";
     dropdownDiv.appendChild(dropdownMenu);
 
-    for (let color of colors) {
-      const li = document.createElement("li");
-      const anchor = document.createElement("a");
+    for (var i = 0; i < colors.length; i++) {
+      var li = document.createElement("li");
+      var anchor = document.createElement("a");
       anchor.className = "dropdown-item";
       anchor.href = "#";
-      anchor.id = "fontColorDropdown-item";
-      anchor.textContent = color;
+      anchor.id = "colorDropdown-item";
+      anchor.textContent = colors[i];
       anchor.addEventListener("click", clickDropdown);
-      li.style.backgroundColor = color;
+      li.style.backgroundColor = colors[i];
       li.appendChild(anchor);
       dropdownMenu.appendChild(li);
     }
@@ -110,11 +107,10 @@ var fontModule = (function () {
     var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
     var obj = {};
 
-    if (event.target.id === "fontColorDropdown-item") {
+    if (event.target.id === "colorDropdown-item") {
       $parentNode.style.backgroundColor = event.target.textContent;
     }
     $parentNode.innerHTML = event.target.textContent;
-
     obj[event.target.id.replace("Dropdown-item", "")] = event.target.textContent;
     updateGlobalEditorObject(obj);
 

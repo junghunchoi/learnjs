@@ -1,6 +1,6 @@
 var GlobalEditorObject = {
   font: "",
-  fontColor: "",
+  color: "",
   fontSize: "",
   isitalic: false,
   isbold: false,
@@ -9,29 +9,26 @@ var GlobalEditorObject = {
 
 function PracEditor() {
   function createEditor() {
-    // 메인 컨테이너
-    const mainArea = document.createElement("div");
+    var mainArea = document.createElement("div");
     mainArea.className = "mainArea";
     mainArea.style.margin = "50px";
     mainArea.style.width = "500px";
 
-    // 툴바 영역
-    const toolbarArea = document.createElement("div");
+    var toolbarArea = document.createElement("div");
     toolbarArea.className = "d-flex flex-row bd-highlight";
     mainArea.appendChild(toolbarArea);
 
-    // 드롭다운 등록
-    for (const dropdown of fontModule.appendDropbox()) {
-      toolbarArea.appendChild(dropdown);
+    var dropdowns = fontModule.appendDropbox();
+    for (var i = 0; i < dropdowns.length; i++) {
+      toolbarArea.appendChild(dropdowns[i]);
     }
 
-    // btn 등록
-    for (const btn of btnModule.appendBtn()) {
-      toolbarArea.appendChild(btn);
+    var btns = btnModule.appendBtn();
+    for (var j = 0; j < btns.length; j++) {
+      toolbarArea.appendChild(btns[j]);
     }
 
-    // 텍스트 영역
-    const editorArea = document.createElement("div");
+    var editorArea = document.createElement("div");
     var ptag = document.createElement("p");
     var brtag = document.createElement("br");
     editorArea.className = "editorArea";
@@ -51,7 +48,7 @@ function PracEditor() {
 
   document.body.appendChild(createEditor());
 
-  let isDragging = false;
+  var isDragging = false;
 
   function handleEvent(event) {
     switch (event.type) {
@@ -59,7 +56,6 @@ function PracEditor() {
         selectionModule.checkSelection(event);
         break;
       case "input":
-        // selectionModule.handleKeyboardInput(event);
         break;
       case "mousedown":
         isDragging = true;
@@ -81,8 +77,8 @@ function PracEditor() {
 PracEditor();
 
 function updateGlobalEditorObject(updates) {
-  for (let key in updates) {
-    if (updates[key] !== undefined) {
+  for (var key in updates) {
+    if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
       GlobalEditorObject[key] = updates[key];
     }
   }
@@ -91,7 +87,7 @@ function updateGlobalEditorObject(updates) {
 function updateToolbar() {
   var $fontDropdown = document.getElementById("fontDropdown");
   var $fontsizeDropdown = document.getElementById("fontSizeDropdown");
-  var $fontColorDropdown = document.getElementById("fontColorDropdown");
+  var $colorDropdown = document.getElementById("colorDropdown");
   var $italicButton = document.getElementById("italicButton");
   var $underlineButton = document.getElementById("underlineButton");
   var $boldButton = document.getElementById("boldButton");
@@ -102,11 +98,11 @@ function updateToolbar() {
         $fontDropdown.innerHTML =
           GlobalEditorObject[prop] === "system-ui"
             ? "기본"
-            : GlobalEditorObject[prop].replace(`"`, "").replace(`"`, "");
+            : GlobalEditorObject[prop].replace('"', "").replace('"', "");
         break;
-      case "fontColor":
-        $fontColorDropdown.innerHTML = GlobalEditorObject[prop];
-        $fontColorDropdown.style.backgroundColor = GlobalEditorObject[prop];
+      case "color":
+        $colorDropdown.innerHTML = convertRGBtoColorName(GlobalEditorObject[prop]);
+        $colorDropdown.style.backgroundColor = GlobalEditorObject[prop];
         break;
       case "fontSize":
         $fontsizeDropdown.innerHTML = GlobalEditorObject[prop];
@@ -151,12 +147,12 @@ function updateToolbar() {
 }
 
 function updateComponentCSS(cssObject, node) {
-  for (const prop in cssObject) {
+  for (var prop in cssObject) {
     switch (prop) {
       case "font":
         node.style.fontFamily = cssObject[prop];
         break;
-      case "fontColor":
+      case "color":
         node.style.color = cssObject[prop];
         break;
       case "fontSize":
@@ -177,27 +173,75 @@ function updateComponentCSS(cssObject, node) {
   }
 }
 
-// function combineHangul(base, add) {
-//   const CHO = [
-//       'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
-//   ];
-//   const JUNG = [
-//       'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'
-//   ];
-//   const JONG = [
-//       '', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
-//   ];
+function convertRGBtoColorName(rgb) {
+  var colorName = "";
+  var colorList = {
+    black: {
+      r: 0,
+      g: 0,
+      b: 0,
+    },
+    blue: {
+      r: 0,
+      g: 0,
+      b: 255,
+    },
+    green: {
+      r: 0,
+      g: 128,
+      b: 0,
+    },
+    yellow: {
+      r: 255,
+      g: 255,
+      b: 0,
+    },
+    purple: {
+      r: 128,
+      g: 0,
+      b: 128,
+    },
+    orange: {
+      r: 255,
+      g: 165,
+      b: 0,
+    },
+    cyan: {
+      r: 0,
+      g: 255,
+      b: 255,
+    },
+    magenta: {
+      r: 255,
+      g: 0,
+      b: 255,
+    },
+    lime: {
+      r: 0,
+      g: 255,
+      b: 0,
+    },
+  };
 
-//   const BASE_CODE = 44032; // '가'의 유니코드
-//   const CHO_LENGTH = CHO.length;
-//   const JUNG_LENGTH = JUNG.length;
-//   const JONG_LENGTH = JONG.length;
+  console.log(rgb);
+  if (/\d/.test(rgb)) {
+    var numbers = rgb.match(/\d+/g).map(Number);
+    var rgbObject = {
+      r: numbers[0],
+      g: numbers[1],
+      b: numbers[2],
+    };
 
-//   const charCode = base.charCodeAt(0) - BASE_CODE;
-//   const choIndex = Math.floor(charCode / (JUNG_LENGTH * JONG_LENGTH));
-//   const jungIndex = Math.floor((charCode - (choIndex * JUNG_LENGTH * JONG_LENGTH)) / JONG_LENGTH);
-
-//   const newCharCode = BASE_CODE + (choIndex * JUNG_LENGTH * JONG_LENGTH) + (jungIndex * JONG_LENGTH) + JONG.indexOf(add);
-
-//   return String.fromCharCode(newCharCode);
-// }
+    for (var colornode in colorList) {
+      var tempColor = colorList[colornode];
+      if (
+        tempColor.r === rgbObject.r &&
+        tempColor.g === rgbObject.g &&
+        tempColor.b === rgbObject.b
+      ) {
+        return colornode;
+      }
+    }
+  }
+  return rgb;
+}

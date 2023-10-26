@@ -5,13 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
-  <input>
-    <input type="text" >.. </input>
-    <div>
-      
-
-      <span style="font: 30px Black Han Sans"> check34567345634563546 </span>
-    </div>
+  <body>
     <p id="p">Select me: <i>italic</i> and <b>bold</b></p>
 
     Cloned: <span id="cloned"></span>
@@ -19,39 +13,29 @@
     As text: <span id="astext"></span>
 
     <script>
+      // button.onclick = () => {
+      //   let range = new Range();
+
+      //   range.setStart(p, start.value);
+      //   range.setEnd(p, end.value);
+
+      //   // apply the selection, explained later
+      //   document.getSelection().removeAllRanges();
+      //   document.getSelection().addRange(range);
+      // };
+        
       document.onselectionchange = function () {
-        // let selection = document.getSelection();
-        // // let selection1 = document.getSelection().anchorNode()
+        let selection = document.getSelection();
 
-        // cloned.innerHTML = astext.innerHTML = "";
+        cloned.innerHTML = astext.innerHTML = "";
 
-        // for (let i = 0; i < selection.rangeCount; i++) {
-        //   cloned.append(selection.getRangeAt(i).cloneContents());
-        // }
-
-        // astext.innerHTML += selection;
-        // console.log(selection);
-        // // console.log(selection1);
-
-        const selection = window.getSelection();
-        if (!selection.isCollapsed) {
-          // 선택된 텍스트가 있는지 확인
-          let node = selection.anchorNode;
-          while (node && node.nodeType !== Node.ELEMENT_NODE) {
-            node = node.parentNode; // 텍스트 노드의 경우 부모 요소로 이동
-          }
-
-          if (node) {
-            const selectedText = selection.toString().trim(); // 선택된 텍스트
-            const fullTextOfNode = node.textContent.trim(); // 태그의 전체 텍스트
-
-            if (selectedText === fullTextOfNode) {
-              console.log("전체 내용이 선택되었습니다.");
-            } else {
-              console.log("전체 내용이 선택되지 않았습니다.");
-            }
-          }
+        // Clone DOM nodes from ranges (we support multiselect here)
+        for (let i = 0; i < selection.rangeCount; i++) {
+          cloned.append(selection.getRangeAt(i).cloneContents());
         }
+
+        // Get as text
+        astext.innerHTML += selection;
       };
     </script>
   </body>

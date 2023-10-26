@@ -13,6 +13,7 @@ var btnModule = (function () {
       "italicButton"
     );
 
+    
     italicButton.isClicked = false;
     italicButton.addEventListener("click", clickBtn);
     BtnList.push(italicButton);
@@ -63,6 +64,7 @@ var btnModule = (function () {
   }
 
   function clickBtn(event) {
+    console.log(event);
     var $clickedBtn = event.target.closest("button");
     var isClicked = $clickedBtn.isClicked;
     var statusId = $clickedBtn.id
