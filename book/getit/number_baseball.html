@@ -29,9 +29,9 @@
     const tries = {};
 
     const inputCheck = function (input){
-        if(!input.length !== 4) return alert('4자리 숫자를 입력해주세요.')
-        if(new Set(input).size !== 4) return alert('중복되지 않은 숫자를 입력하세요')
-        if(tries.includes(input)) return alert('이미 시도한 값입니다')
+        if(!input.length !== 4) return console.log('4자리 숫자를 입력해주세요.')
+        if(new Set(input).size !== 4) return console.log('중복되지 않은 숫자를 입력하세요')
+        if(tries.includes(input)) return console.log('이미 시도한 값입니다')
 
     }
 </script>

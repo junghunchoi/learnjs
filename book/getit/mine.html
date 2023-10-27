@@ -164,7 +164,7 @@ function open(rowIndex, cellIndex) {
     $tbody.removeEventListener('contextmenu', onRightClick);
     $tbody.removeEventListener('click', onLeftClick);
     setTimeout(() => {
-      alert(`승리했습니다! ${time}초가 걸렸습니다.`);
+      console.log(`승리했습니다! ${time}초가 걸렸습니다.`);
     }, 500);
   }
   return count;
