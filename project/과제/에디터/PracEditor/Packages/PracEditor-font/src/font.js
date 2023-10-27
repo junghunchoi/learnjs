@@ -3,15 +3,15 @@ var fontModule = (function () {
     var dropboxList = [];
 
     var fontDropdown = createDropdown(
-      "기본",
-      ["기본", "Black Han Sans", "Nanum Brush Script"],
+      "Noto Sans KR",
+      ["Noto Sans KR", "Black Han Sans", "Nanum Brush Script"],
       "fontDropdown"
     );
     dropboxList.push(fontDropdown);
 
     var fontSizeDropdown = createDropdown(
-      "12pt",
-      ["9pt", "10pt", "12pt", "14pt", "16pt", "20pt"],
+      "16px",
+      ["9px", "10px", "12px", "14px", "16px", "20px"],
       "fontSizeDropdown"
     );
     dropboxList.push(fontSizeDropdown);
@@ -34,34 +34,36 @@ var fontModule = (function () {
 
   function createDropdown(title, items, dropdownId) {
     var dropdownSpan = document.createElement("span");
-    var dropdownDiv = document.createElement("div");
-    dropdownDiv.className = "dropdown p-2";
-    dropdownSpan.appendChild(dropdownDiv);
+    var $select = document.createElement("select");
+    $select.id = dropdownId;
+    dropdownSpan.appendChild($select);
+    $select.addEventListener("change", function (event) {
+      var selectedOptionText = this.options[this.selectedIndex].textContent;
+      var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
+      var obj = {};
+      if (event.target.id === "colorDropdown-item") {
+        $parentNode.style.backgroundColor = selectedOptionText;
+      }
+      $parentNode.options[this.selectedIndex].selected = true;
+      //
+      //
+      obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
+      updateGlobalEditorObject(obj);
 
-    var dropdownButton = document.createElement("button");
-    dropdownButton.className = "btn btn-light dropdown-toggle btn-sm btn-outline-dark";
-    dropdownButton.id = dropdownId;
-    dropdownButton.type = "button";
+      selectionModule.checkSelectionType(event)
+      // selectionModule.updateOrInsertElement(GlobalEditorObject);
+    });
 
-    dropdownButton.setAttribute("data-bs-toggle", "dropdown");
-    dropdownButton.setAttribute("aria-expanded", "false");
-    dropdownButton.textContent = title;
-    dropdownDiv.appendChild(dropdownButton);
+    items.forEach(function (item) {
+      var $option = document.createElement("option");
 
-    var dropdownMenu = document.createElement("ul");
-    dropdownMenu.className = "dropdown-menu";
-    dropdownDiv.appendChild(dropdownMenu);
+      if (item === "16px") {
+        $option.selected = true;
+      }
+      $option.textContent = item;
+      $option.id = dropdownId + "-item";
 
-    items.forEach(function(item) {
-      var listItem = document.createElement("li");
-      var anchor = document.createElement("a");
-      anchor.className = "dropdown-item";
-      anchor.href = "#";
-      anchor.textContent = item;
-      anchor.id = dropdownId + "-item";
-      anchor.addEventListener("click", clickDropdown);
-      listItem.appendChild(anchor);
-      dropdownMenu.appendChild(listItem);
+      $select.appendChild($option);
     });
 
     return dropdownSpan;
@@ -69,53 +71,38 @@ var fontModule = (function () {
 
   function createFontColorDropdown(colors) {
     var dropdownSpan = document.createElement("span");
-    var dropdownDiv = document.createElement("div");
-    dropdownDiv.className = "dropdown p-2";
-    dropdownSpan.appendChild(dropdownDiv);
+    var $select = document.createElement("select");
+    $select.id = "colorDropdown";
+    $select.addEventListener("change", function (event) {
+      var selectedOptionText = this.options[this.selectedIndex].textContent;
+      var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
 
-    var dropdownButton = document.createElement("button");
-    dropdownButton.className = "btn btn-light dropdown-toggle btn-sm btn-outline-dark";
-    dropdownButton.id = "colorDropdown";
-    dropdownButton.type = "button";
+      var obj = {};
+      if (event.target.id === "colorDropdown") {
+        $parentNode.style.color = selectedOptionText;
+      }
+      $parentNode.options[this.selectedIndex].selected = true;
+      obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
+      updateGlobalEditorObject(obj);
 
-    dropdownButton.setAttribute("data-bs-toggle", "dropdown");
-    dropdownButton.setAttribute("aria-expanded", "false");
-    dropdownButton.textContent = "black";
-    dropdownDiv.appendChild(dropdownButton);
+      selectionModule.checkSelectionType(event)
+      // selectionModule.updateOrInsertElement(GlobalEditorObject);
+    });
 
-    var dropdownMenu = document.createElement("ul");
-    dropdownMenu.className = "dropdown-menu";
-    dropdownDiv.appendChild(dropdownMenu);
+    dropdownSpan.appendChild($select);
 
     for (var i = 0; i < colors.length; i++) {
-      var li = document.createElement("li");
-      var anchor = document.createElement("a");
-      anchor.className = "dropdown-item";
-      anchor.href = "#";
-      anchor.id = "colorDropdown-item";
-      anchor.textContent = colors[i];
-      anchor.addEventListener("click", clickDropdown);
-      li.style.backgroundColor = colors[i];
-      li.appendChild(anchor);
-      dropdownMenu.appendChild(li);
+      var $option = document.createElement("option");
+      $option.id = "colorDropdown-item";
+      $option.textContent = colors[i];
+      $option.style.backgroundColor = colors[i];
+      $select.appendChild($option);
     }
 
     return dropdownSpan;
   }
 
-  function clickDropdown(event) {
-    var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
-    var obj = {};
 
-    if (event.target.id === "colorDropdown-item") {
-      $parentNode.style.backgroundColor = event.target.textContent;
-    }
-    $parentNode.innerHTML = event.target.textContent;
-    obj[event.target.id.replace("Dropdown-item", "")] = event.target.textContent;
-    updateGlobalEditorObject(obj);
-
-    selectionModule.updateOrInsertElement(GlobalEditorObject)
-  }
 
   return {
     appendDropbox: appendDropbox,

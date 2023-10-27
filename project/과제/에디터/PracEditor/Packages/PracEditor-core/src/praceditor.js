@@ -1,7 +1,7 @@
 var GlobalEditorObject = {
   font: "",
-  color: "",
-  fontSize: "",
+  color: "black",
+  fontSize: "16px",
   isitalic: false,
   isbold: false,
   isunderline: false,
@@ -12,7 +12,7 @@ function PracEditor() {
     var mainArea = document.createElement("div");
     mainArea.className = "mainArea";
     mainArea.style.margin = "50px";
-    mainArea.style.width = "500px";
+    mainArea.style.width = "600px";
 
     var toolbarArea = document.createElement("div");
     toolbarArea.className = "d-flex flex-row bd-highlight";
@@ -42,6 +42,24 @@ function PracEditor() {
     editorArea.addEventListener("mousedown", handleEvent);
     editorArea.addEventListener("mousemove", handleEvent);
     editorArea.addEventListener("mouseup", handleEvent);
+    editorArea.addEventListener("change",function(event){
+
+    })
+    
+    var $previewButton = document.createElement("button");
+    var $preview = document.createElement("div");
+    $previewButton.style.width="50px"
+    $previewButton.style.height="50px"
+    $previewButton.textContent = "미리보기"
+    $previewButton.addEventListener("click",function(){
+      $preview.innerHTML = editorArea.innerHTML
+    })
+
+    mainArea.appendChild($previewButton)
+    mainArea.appendChild($preview)
+    
+
+
 
     return mainArea;
   }
@@ -93,19 +111,21 @@ function updateToolbar() {
   var $boldButton = document.getElementById("boldButton");
 
   for (var prop in GlobalEditorObject) {
+    
     switch (prop) {
       case "font":
-        $fontDropdown.innerHTML =
-          GlobalEditorObject[prop] === "system-ui"
-            ? "기본"
-            : GlobalEditorObject[prop].replace('"', "").replace('"', "");
+        var index = findSelectIndex(GlobalEditorObject[prop], prop);
+        $fontDropdown.options[index].selected = true;
         break;
       case "color":
-        $colorDropdown.innerHTML = convertRGBtoColorName(GlobalEditorObject[prop]);
-        $colorDropdown.style.backgroundColor = GlobalEditorObject[prop];
+        var index = findSelectIndex(GlobalEditorObject[prop], prop);
+        if(GlobalEditorObject[prop]==='rgb(34, 34, 34)') index = 0
+        $colorDropdown.options[index].selected = true;//textContent = convertRGBtoColorName(GlobalEditorObject[prop]);
+        $colorDropdown.style.color = GlobalEditorObject[prop];
         break;
       case "fontSize":
-        $fontsizeDropdown.innerHTML = GlobalEditorObject[prop];
+        var index = findSelectIndex(GlobalEditorObject[prop], prop);
+        $fontsizeDropdown.options[index].selected = true;
         break;
       case "isitalic":
         if (GlobalEditorObject[prop]) {
@@ -220,10 +240,8 @@ function convertRGBtoColorName(rgb) {
       r: 0,
       g: 255,
       b: 0,
-    },
+    }
   };
-
-  console.log(rgb);
   if (/\d/.test(rgb)) {
     var numbers = rgb.match(/\d+/g).map(Number);
     var rgbObject = {
@@ -244,4 +262,17 @@ function convertRGBtoColorName(rgb) {
     }
   }
   return rgb;
+}
+
+function findSelectIndex(value, type) { // rgb 값으로 날라와 
+  var $select = document.getElementById(type + "Dropdown");
+  var options = $select.options;
+  var convertValue =  value.replace(/"/g, ''); // 여기선 
+  var index = -1;
+  for (let i = 0; i < options.length; i++) {
+    if (options[i].textContent === convertValue) {
+      index = i;
+      return index;
+    }
+  }
 }

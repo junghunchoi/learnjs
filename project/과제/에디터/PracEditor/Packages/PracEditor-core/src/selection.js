@@ -31,7 +31,7 @@ var selectionModule = (function () {
       frontCursorIsItalic = computedStyle.fontStyle === "italic" ? true : false;
       frontCursorHTML = parentElement.tagName;
       obj["font"] = frontCursorFont;
-      obj["color"] = frontCursorFontColor; 
+      obj["color"] = convertRGBtoColorName(frontCursorFontColor);
       obj["fontSize"] = frontCursorFontSize;
       obj["isitalic"] = frontCursorIsItalic;
       obj["isbold"] = frontCursorIsBold;
@@ -42,6 +42,16 @@ var selectionModule = (function () {
     }
   }
 
+  function checkSelectionType(event){
+    var selectionType = window.getSelection().type;
+
+    if(selectionType === "Caret"){
+      selectionModule.updateOrInsertElement(GlobalEditorObject);
+    }else{
+      selectionModule.processDraggedText()
+    }
+  }
+
   function updateOrInsertElement(newStyle) {
     var sel = window.getSelection();
     var range = sel.getRangeAt(0);
@@ -49,10 +59,13 @@ var selectionModule = (function () {
     var parentElement =
       currentNode.nodeType === Node.TEXT_NODE ? currentNode.parentNode : currentNode;
 
-    if ((parentElement.textContent.trim() === "&#xFEFF" || parentElement.textContent.trim() === "")&& parentElement.tagName === "SPAN") {
+    if (
+      (parentElement.textContent.trim() === "&#xFEFF" || parentElement.textContent.trim() === "") &&
+      parentElement.tagName === "SPAN"
+    ) {
       console.log("update");
       updateComponentCSS(newStyle, parentElement);
-      range.setStart(parentElement.firstChild,1);
+      range.setStart(parentElement.firstChild, 1);
       range.setEnd(parentElement.firstChild, 1);
       sel.removeAllRanges();
       sel.addRange(range);
@@ -66,14 +79,54 @@ var selectionModule = (function () {
       range.setEnd($newElement.firstChild, 1);
       sel.removeAllRanges();
       sel.addRange(range);
-      
     }
   }
 
 
+  function processDraggedText() {
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var startNode = range.startContainer;
+    var endNode = range.endContainer;
+
+    //드래그한영역이 하나의 태그안에 있고 전체 텍스트이면
+    if (
+      range.startContainer.parentElement === range.endContainer.parentElement &&
+      selection.toString() === startNode.textContent
+    ) {
+      processEntireTagText();
+    } else {
+      handleTagSelection();
+    }
+  }
+
+  function processEntireTagText() {
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var dragedHtmlTag = range.startContainer.parentElement;
+    updateComponentCSS(GlobalEditorObject, dragedHtmlTag);
+  }
+
+  function handleTagSelection() {
+    console.log("handleMultiTagSelection");
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var originText = selection.toString();
+
+    selection.deleteFromDocument();
+
+    var $span = document.createElement("span");
+    updateComponentCSS(GlobalEditorObject, $span);
+    $span.textContent = originText;
+    console.log($span);
+    range.insertNode($span);
+    selection.removeAllRanges();
+  }
+
   return {
     checkSelection: checkSelection,
     updateOrInsertElement: updateOrInsertElement,
-    // handleKeyboardInput: handleKeyboardInput,
+    processDraggedText: processDraggedText,
+    checkSelectionType:checkSelectionType
   };
 })();

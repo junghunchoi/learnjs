@@ -13,9 +13,8 @@ var btnModule = (function () {
       "italicButton"
     );
 
-    
     italicButton.isClicked = false;
-    italicButton.addEventListener("click", clickBtn);
+    italicButton.addEventListener("click",clickBtn);
     BtnList.push(italicButton);
 
     // 언더라인 버튼
@@ -64,36 +63,33 @@ var btnModule = (function () {
   }
 
   function clickBtn(event) {
-    console.log(event);
     var $clickedBtn = event.target.closest("button");
     var isClicked = $clickedBtn.isClicked;
-    var statusId = $clickedBtn.id
-    var statusBtn = "is"+statusId.replace("Button","")
-    var obj ={};
-    
+    var statusId = $clickedBtn.id;
+    var statusBtn = "is" + statusId.replace("Button", "");
+    var obj = {};
 
     if (!isClicked) {
       $clickedBtn.isClicked = true;
       $clickedBtn.classList.add("btn-secondary");
       $clickedBtn.classList.remove("btn-light");
-      obj[statusBtn]=true;
-      updateGlobalEditorObject(obj)
+      obj[statusBtn] = true;
     } else {
       $clickedBtn.isClicked = false;
       $clickedBtn.classList.add("btn-light");
       $clickedBtn.classList.remove("btn-secondary");
-      obj[statusBtn]=false;
-      updateGlobalEditorObject(obj)
+      obj[statusBtn] = false;
     }
-
-    selectionModule.updateOrInsertElement(GlobalEditorObject)
+    updateGlobalEditorObject(obj);
+    selectionModule.checkSelectionType(event)
+    
   }
 
   function createButton(title, svgPath, btnId) {
     var buttonSpan = document.createElement("span");
     buttonSpan.className = "buttonArea";
-    buttonSpan.style.height = "10px"
-    buttonSpan.style.padding = "5px"
+    buttonSpan.style.height = "10px";
+    buttonSpan.style.padding = "5px";
     var button = document.createElement("button");
     button.className = "btn btn-light";
     button.title = title;
@@ -109,10 +105,9 @@ var btnModule = (function () {
     path.setAttribute("d", svgPath);
     svg.appendChild(path);
 
-    
-
     return buttonSpan;
   }
+
 
   // public 메서드와 속성을 반환
   return {
@@ -120,4 +115,3 @@ var btnModule = (function () {
     clickBtn: clickBtn,
   };
 })();
-

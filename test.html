@@ -19,5 +19,41 @@
             <a href="#none">Apartment</a>
         </div>
     </div>
+    <p id="p">Select me: <i>italic</i> and <b>bold</b></p>
+
+Cloned: <span id="cloned"></span>
+<br>
+As text: <span id="astext"></span>
+<button onclick="execute()">Click Me</button>
+
+<script>
+  document.onselectionchange = function() {
+    // let selection = document.getSelection();
+
+    // cloned.innerHTML = astext.innerHTML = "";
+
+    // // Clone DOM nodes from ranges (we support multiselect here)
+    // for (let i = 0; i < selection.rangeCount; i++) {
+    //   cloned.append(selection.getRangeAt(i).cloneContents());
+    // }
+    // console.log(cloned);
+    // // Get as text
+    // astext.innerHTML += selection;
+  };
+  function execute(){
+    
+    let selection = window.getSelection();
+    let originText = selection.toString()
+    let range = selection.getRangeAt(0)
+    selection.deleteFromDocument()
+
+    const $span = document.createElement("span")
+    $span.style.color="red"
+    $span.textContent=originText
+    range.insertNode($span)
+    selection.removeAllRanges()
+
+  }
+</script>
 </body>
 </html>
