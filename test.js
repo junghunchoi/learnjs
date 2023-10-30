@@ -1,18 +1,30 @@
-async function wait() {
-    await new Promise((resolve, reject) => {
-        setTimeout(() => {
-           new Error("에러 발생!");
-        }, 1000);
-    });
+import sql from "mssql/msnodesqlv8.js";
 
-    return 10;
+// Connect to SQL Server using Windows Auth
+const conn = new sql.ConnectionPool({
+  connectionString:
+    "Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes",
+});
+
+// conn.connect()
+//     .then(function () {
+//       console.log("Connected to SQL Server");
+//     })
+//     .catch(function (err) {
+//       console.log(err);
+//     }
+//     );
+
+console.log("Starting...");
+connectAndQuery();
+
+async function connectAndQuery() {
+  try {
+    // var poolConnection = await sql.connect(conn);
+    var resultSet = await conn.request().query(`select * from checktable`);
+
+    console.log(`${resultSet.recordset.length} rows returned`);
+  } catch (err) {
+    console.log(err);
+  }
 }
-
-function f() {
-    wait().then(
-        result => console.log(result)
-        // error => console.error(error)
-    ).catch(error=>console.log("error"));
-}
-
-f();

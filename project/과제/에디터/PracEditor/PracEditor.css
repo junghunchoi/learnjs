@@ -1,8 +1,13 @@
 p {
   color: black;
+  margin: -3px;
 }
 .p-2 {
   padding: 0.5rem !important;
+}
+
+span {
+  display: inline-block;
 }
 
 div {
@@ -143,4 +148,9 @@ select {
 
 select:focus {
   outline: none;
+}
+
+[contenteditable] {
+  padding: 10px;
+  margin-bottom: 10px;
 }

@@ -42,24 +42,19 @@ function PracEditor() {
     editorArea.addEventListener("mousedown", handleEvent);
     editorArea.addEventListener("mousemove", handleEvent);
     editorArea.addEventListener("mouseup", handleEvent);
-    editorArea.addEventListener("change",function(event){
+  
 
-    })
-    
     var $previewButton = document.createElement("button");
     var $preview = document.createElement("div");
-    $previewButton.style.width="50px"
-    $previewButton.style.height="50px"
-    $previewButton.textContent = "미리보기"
-    $previewButton.addEventListener("click",function(){
-      $preview.innerHTML = editorArea.innerHTML
-    })
+    $previewButton.style.width = "50px";
+    $previewButton.style.height = "50px";
+    $previewButton.textContent = "미리보기";
+    $previewButton.addEventListener("click", function () {
+      $preview.innerHTML = editorArea.innerHTML;
+    });
 
-    mainArea.appendChild($previewButton)
-    mainArea.appendChild($preview)
-    
-
-
+    mainArea.appendChild($previewButton);
+    mainArea.appendChild($preview);
 
     return mainArea;
   }
@@ -72,8 +67,6 @@ function PracEditor() {
     switch (event.type) {
       case "click":
         selectionModule.checkSelection(event);
-        break;
-      case "input":
         break;
       case "mousedown":
         isDragging = true;
@@ -111,7 +104,6 @@ function updateToolbar() {
   var $boldButton = document.getElementById("boldButton");
 
   for (var prop in GlobalEditorObject) {
-    
     switch (prop) {
       case "font":
         var index = findSelectIndex(GlobalEditorObject[prop], prop);
@@ -119,50 +111,37 @@ function updateToolbar() {
         break;
       case "color":
         var index = findSelectIndex(GlobalEditorObject[prop], prop);
-        if(GlobalEditorObject[prop]==='rgb(34, 34, 34)') index = 0
-        $colorDropdown.options[index].selected = true;//textContent = convertRGBtoColorName(GlobalEditorObject[prop]);
+        if (GlobalEditorObject[prop] === "rgb(34, 34, 34)") index = 0;
+        $colorDropdown.options[index].selected = true; 
         $colorDropdown.style.color = GlobalEditorObject[prop];
         break;
-      case "fontSize":
-        var index = findSelectIndex(GlobalEditorObject[prop], prop);
-        $fontsizeDropdown.options[index].selected = true;
+        case "fontSize":
+        $fontsizeDropdown.options[findSelectIndex(GlobalEditorObject[prop], prop)].selected = true;
         break;
       case "isitalic":
-        if (GlobalEditorObject[prop]) {
-          $italicButton.isClicked = true;
-          $italicButton.classList.add("btn-secondary");
-          $italicButton.classList.remove("btn-light");
-        } else {
-          $italicButton.isClicked = false;
-          $italicButton.classList.add("btn-light");
-          $italicButton.classList.remove("btn-secondary");
-        }
+        updateButtonStyle($italicButton, GlobalEditorObject[prop]);
         break;
       case "isbold":
-        if (GlobalEditorObject[prop]) {
-          $boldButton.isClicked = true;
-          $boldButton.classList.add("btn-secondary");
-          $boldButton.classList.remove("btn-light");
-        } else {
-          $boldButton.isClicked = false;
-          $boldButton.classList.add("btn-light");
-          $boldButton.classList.remove("btn-secondary");
-        }
+        updateButtonStyle($boldButton, GlobalEditorObject[prop]);
         break;
       case "isunderline":
-        if (GlobalEditorObject[prop]) {
-          $underlineButton.isClicked = true;
-          $underlineButton.classList.add("btn-secondary");
-          $underlineButton.classList.remove("btn-light");
-        } else {
-          $underlineButton.isClicked = false;
-          $underlineButton.classList.add("btn-light");
-          $underlineButton.classList.remove("btn-secondary");
-        }
+        updateButtonStyle($underlineButton, GlobalEditorObject[prop]);
         break;
       default:
         break;
     }
+  }
+}
+
+function updateButtonStyle(button, condition) {
+  if (condition) {
+    button.isClicked = true;
+    button.classList.add("btn-secondary");
+    button.classList.remove("btn-light");
+  } else {
+    button.isClicked = false;
+    button.classList.add("btn-light");
+    button.classList.remove("btn-secondary");
   }
 }
 
@@ -196,52 +175,17 @@ function updateComponentCSS(cssObject, node) {
 function convertRGBtoColorName(rgb) {
   var colorName = "";
   var colorList = {
-    black: {
-      r: 0,
-      g: 0,
-      b: 0,
-    },
-    blue: {
-      r: 0,
-      g: 0,
-      b: 255,
-    },
-    green: {
-      r: 0,
-      g: 128,
-      b: 0,
-    },
-    yellow: {
-      r: 255,
-      g: 255,
-      b: 0,
-    },
-    purple: {
-      r: 128,
-      g: 0,
-      b: 128,
-    },
-    orange: {
-      r: 255,
-      g: 165,
-      b: 0,
-    },
-    cyan: {
-      r: 0,
-      g: 255,
-      b: 255,
-    },
-    magenta: {
-      r: 255,
-      g: 0,
-      b: 255,
-    },
-    lime: {
-      r: 0,
-      g: 255,
-      b: 0,
-    }
+    black: { r: 0, g: 0, b: 0 },
+    blue: { r: 0, g: 0, b: 255 },
+    green: { r: 0, g: 128, b: 0 },
+    yellow: { r: 255, g: 255, b: 0 },
+    purple: { r: 128, g: 0, b: 128 },
+    orange: { r: 255, g: 165, b: 0 },
+    cyan: { r: 0, g: 255, b: 255 },
+    magenta: { r: 255, g: 0, b: 255 },
+    lime: { r: 0, g: 255, b: 0 }
   };
+  
   if (/\d/.test(rgb)) {
     var numbers = rgb.match(/\d+/g).map(Number);
     var rgbObject = {
@@ -264,15 +208,15 @@ function convertRGBtoColorName(rgb) {
   return rgb;
 }
 
-function findSelectIndex(value, type) { // rgb 값으로 날라와 
-  var $select = document.getElementById(type + "Dropdown");
-  var options = $select.options;
-  var convertValue =  value.replace(/"/g, ''); // 여기선 
-  var index = -1;
-  for (let i = 0; i < options.length; i++) {
-    if (options[i].textContent === convertValue) {
-      index = i;
-      return index;
+function findSelectIndex(value, type) {
+  var select = document.getElementById(type + "Dropdown");
+  var options = select.options;
+  var convertValue = value.replace(/"/g, "");
+
+  for (var i = 0; i < options.length; i++) {
+    if (options[i].value === convertValue) {
+      return i;
     }
   }
+  return 0;
 }

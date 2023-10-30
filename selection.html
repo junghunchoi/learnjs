@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+      <p>안녕하세요</p>
+      <p>감사해요</p>
+      <p>잘있어요</p>
+      <p>다시 만나요</p>
+      <p>하하하하하하</p>
+    </div>
+    <script>
+      document.addEventListener("mouseup", function () {
+        var selection = window.getSelection();
+        var range = selection.getRangeAt(0);
+        var startNode = range.startContainer;
+        var endNode = range.endContainer;
+
+        
+        // 시작 및 종료 노드가 텍스트 노드인 경우 부모 요소 참조
+        if (startNode.nodeType === 3) {
+          startNode = startNode.parentNode;
+        }
+        if (endNode.nodeType === 3) {
+          endNode = endNode.parentNode;
+        }
+
+        var currentNode = startNode;
+        console.log("nextElementSibling", currentNode.nextElementSibling);
+
+        // 시작 노드부터 종료 노드까지 순회
+        while (currentNode && currentNode !== endNode) {
+          if (currentNode.tagName === "P") {
+            // 원하는 DOM 요소 또는 스타일 추가
+            currentNode.style.color = "red"; // 예: 텍스트 색상을 빨간색으로 변경
+
+            // 예: 각 p 태그 끝에 span 요소 추가
+            var span = document.createElement("span");
+            span.textContent = " [added]";
+            currentNode.appendChild(span);
+          }
+
+          // 다음 노드 참조
+          currentNode = currentNode.nextElementSibling;
+          debugger
+        }
+
+        // 종료 노드에도 동일한 처리 적용
+        if (endNode.tagName === "P") {
+          endNode.style.color = "red";
+          var span = document.createElement("span");
+          span.textContent = " [added]";
+          endNode.appendChild(span);
+        }
+      });
+    </script>
+  </body>
+</html>

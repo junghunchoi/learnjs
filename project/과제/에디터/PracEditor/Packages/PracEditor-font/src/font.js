@@ -3,14 +3,12 @@ var fontModule = (function () {
     var dropboxList = [];
 
     var fontDropdown = createDropdown(
-      "Noto Sans KR",
       ["Noto Sans KR", "Black Han Sans", "Nanum Brush Script"],
       "fontDropdown"
     );
     dropboxList.push(fontDropdown);
 
     var fontSizeDropdown = createDropdown(
-      "16px",
       ["9px", "10px", "12px", "14px", "16px", "20px"],
       "fontSizeDropdown"
     );
@@ -32,7 +30,7 @@ var fontModule = (function () {
     return dropboxList;
   }
 
-  function createDropdown(title, items, dropdownId) {
+  function createDropdown(items, dropdownId) {
     var dropdownSpan = document.createElement("span");
     var $select = document.createElement("select");
     $select.id = dropdownId;
@@ -45,13 +43,10 @@ var fontModule = (function () {
         $parentNode.style.backgroundColor = selectedOptionText;
       }
       $parentNode.options[this.selectedIndex].selected = true;
-      //
-      //
       obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
       updateGlobalEditorObject(obj);
 
-      selectionModule.checkSelectionType(event)
-      // selectionModule.updateOrInsertElement(GlobalEditorObject);
+      selectionModule.checkSelectionType(event);
     });
 
     items.forEach(function (item) {
@@ -73,6 +68,7 @@ var fontModule = (function () {
     var dropdownSpan = document.createElement("span");
     var $select = document.createElement("select");
     $select.id = "colorDropdown";
+    dropdownSpan.appendChild($select);
     $select.addEventListener("change", function (event) {
       var selectedOptionText = this.options[this.selectedIndex].textContent;
       var $parentNode = document.getElementById(event.target.id.replace("-item", ""));
@@ -85,11 +81,8 @@ var fontModule = (function () {
       obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
       updateGlobalEditorObject(obj);
 
-      selectionModule.checkSelectionType(event)
-      // selectionModule.updateOrInsertElement(GlobalEditorObject);
+      selectionModule.checkSelectionType(event);
     });
-
-    dropdownSpan.appendChild($select);
 
     for (var i = 0; i < colors.length; i++) {
       var $option = document.createElement("option");
@@ -101,8 +94,6 @@ var fontModule = (function () {
 
     return dropdownSpan;
   }
-
-
 
   return {
     appendDropbox: appendDropbox,

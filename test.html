@@ -7,19 +7,12 @@
     <link rel="stylesheet" href="./test.css">
 </head>
 <body>
-    <div class="dropdown">
-        <button class="btn btn-light dropdown-toggle btn-sm btn-outline-dark dropdown-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Real Estate Type ::after</button>
-        <div class="dropdown-submenu">
-            <a href="#none">All</a>
-            <a href="#none">One room</a>
-            <a href="#none">1.5 rooms</a>
-            <a href="#none">Two rooms</a>
-            <a href="#none">Three rooms</a>
-            <a href="#none">Officetel</a>
-            <a href="#none">Apartment</a>
-        </div>
-    </div>
-    <p id="p">Select me: <i>italic</i> and <b>bold</b></p>
+   
+    <b id="p">Select me: <i>italic</i> and <b>bold</b></b>
+
+    <p>쉽지가
+      <p style="font-family: &quot;Noto Sans KR&quot;; color: black; font-size: 16px; font-style: normal; font-weight: bold; text-decoration: none;">안녕해</p><p style="font-family: &quot;Noto Sans KR&quot;; color: black; font-size: 16px; font-style: normal; font-weight: bold; text-decoration: none;">감사해</p><p style="font-family: &quot;Noto Sans KR&quot;; color: black; font-size: 16px; font-style: normal; font-weight: bold; text-decoration: none;">잘있어</p>
+    </p>
 
 Cloned: <span id="cloned"></span>
 <br>
@@ -28,32 +21,30 @@ As text: <span id="astext"></span>
 
 <script>
   document.onselectionchange = function() {
-    // let selection = document.getSelection();
-
-    // cloned.innerHTML = astext.innerHTML = "";
-
-    // // Clone DOM nodes from ranges (we support multiselect here)
-    // for (let i = 0; i < selection.rangeCount; i++) {
-    //   cloned.append(selection.getRangeAt(i).cloneContents());
-    // }
-    // console.log(cloned);
-    // // Get as text
-    // astext.innerHTML += selection;
-  };
-  function execute(){
-    
-    let selection = window.getSelection();
-    let originText = selection.toString()
+    let selection = document.getSelection();
     let range = selection.getRangeAt(0)
-    selection.deleteFromDocument()
+    cloned.innerHTML = astext.innerHTML = "";
 
-    const $span = document.createElement("span")
-    $span.style.color="red"
-    $span.textContent=originText
-    range.insertNode($span)
-    selection.removeAllRanges()
+    // Clone DOM nodes from ranges (we support multiselect here)
+    for (let i = 0; i < selection.rangeCount; i++) {
+      cloned.append(selection.getRangeAt(i).cloneContents());
+      
+    }
+    // console.log("range : ",range.startContainer);
+    // console.log(range.cloneContents());
 
-  }
+    var ccc = range.cloneContents()
+    var childNodes = ccc.childNodes;
+    
+    for (var i = 0; i < childNodes.length; i++) {
+            if (childNodes[i].nodeType === 1) {  // Element Node
+              console.log(childNodes[i]);
+                console.log(childNodes[i].textContent);
+            }
+        }
+
+  };
+ 
 </script>
 </body>
 </html>

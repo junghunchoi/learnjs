@@ -5,8 +5,15 @@ var scriptList = [
     '../PracEditor/Packages/PracEditor-core/src/praceditor.js',
   ];
   
-  for (var i = 0; i < scriptList.length; i++) {
-    var script = document.createElement('script');
-    script.src = scriptList[i];
-    document.body.appendChild(script);
+  function loadScriptsSequentially(scripts, index) {
+    if (index < scripts.length) {
+        var script = document.createElement('script');
+        script.src = scripts[index];
+        script.onload = function() {
+            loadScriptsSequentially(scripts, index + 1);
+        };
+        document.body.appendChild(script);
+    }
 }
+
+loadScriptsSequentially(scriptList, 0);
