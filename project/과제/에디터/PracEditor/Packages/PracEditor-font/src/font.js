@@ -44,7 +44,7 @@ var fontModule = (function () {
       }
       $parentNode.options[this.selectedIndex].selected = true;
       obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
-      updateGlobalEditorObject(obj);
+      PracEditorApp.updateGlobalEditorObject(obj);
 
       selectionModule.checkSelectionType(event);
     });
@@ -79,7 +79,7 @@ var fontModule = (function () {
       }
       $parentNode.options[this.selectedIndex].selected = true;
       obj[this.options[this.selectedIndex].id.replace("Dropdown-item", "")] = selectedOptionText;
-      updateGlobalEditorObject(obj);
+      PracEditorApp.updateGlobalEditorObject(obj);
 
       selectionModule.checkSelectionType(event);
     });

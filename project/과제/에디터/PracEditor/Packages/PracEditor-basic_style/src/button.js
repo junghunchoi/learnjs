@@ -67,12 +67,11 @@ var btnModule = (function () {
     $clickedBtn.classList.toggle("btn-secondary", $clickedBtn.isClicked);
     $clickedBtn.classList.toggle("btn-light", !$clickedBtn.isClicked);
 
-    updateGlobalEditorObject(obj);
+    PracEditorApp.updateGlobalEditorObject(obj);
     selectionModule.checkSelectionType(event);
   }
 
   return {
-    appendBtn: appendBtn,
-    clickBtn: clickBtn
+    appendBtn: appendBtn
   };
 })();

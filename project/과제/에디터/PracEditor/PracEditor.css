@@ -30,6 +30,11 @@ a {
   text-decoration: none;
 }
 
+.mainArea{
+  margin: 50px;
+  width: 600px;
+}
+
 .dropdown {
   /* 보더를 통해서 틀을 봐주는게 좋다 ! */
   /* border: 1px solid #000; */
@@ -63,9 +68,7 @@ a {
 .dropdown-submenu a:hover {
   background-color: #eee;
 }
-/* hover 뒤에 다른 selector가 이어지면 앞이 명령의 대상, 뒤에가 style이 수행되고 적용되는 부분 */
-/* dropdown-btn 과 dropdown-sumbenu는 둘이 같은 계층이다 그래서 동작 안하는거임 (상하관계가 되어야 동작함)
-한칸을 띄운다 = 상하관계가 전제가 되어있다는거임 !!!!!*/
+
 .dropdown:hover .dropdown-submenu {
   display: block;
 }
@@ -77,7 +80,7 @@ a {
 .btn-outline-dark {
   color: #212529;
   border-color: #212529;
-  background-color: transparent; /* Assuming this since it's not provided in the original code */
+  background-color: transparent;
 }
 
 .btn-secondary {
@@ -93,7 +96,7 @@ a {
 }
 
 .btn-secondary:focus {
-  box-shadow: 0 0 0 0.25rem rgba(130, 138, 145, 0.5); /* Using the provided --bs-btn-focus-shadow-rgb values */
+  box-shadow: 0 0 0 0.25rem rgba(130, 138, 145, 0.5);
 }
 
 .btn-secondary:active {
@@ -123,7 +126,7 @@ a {
 }
 
 .btn-light:focus {
-  box-shadow: 0 0 0 0.25rem rgba(211, 212, 213, 0.5); /* Adjusted for typical focus glow. Modify as needed. */
+  box-shadow: 0 0 0 0.25rem rgba(211, 212, 213, 0.5);
 }
 
 .btn-light:active {
@@ -154,3 +157,4 @@ select:focus {
   padding: 10px;
   margin-bottom: 10px;
 }
+
