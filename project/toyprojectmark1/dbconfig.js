@@ -1,7 +1,7 @@
 const  config = {
-  user:  'junghun', // sql user
-  password:  'wjdgns13', //sql user password
-  server:  'DESKTOP-UFIU5K0', // if it does not work try- localhost
+  user:  'junghun', 
+  password:  'wjdgns13', 
+  server: 'DESKTOP-7FPEHFD', //'DESKTOP-UFIU5K0', //
   database:  'master',
   options: {
     trustedconnection:  true,

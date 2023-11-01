@@ -42,10 +42,10 @@ async  function  addOrder(order) {
     .input('Id', sql.Int, order.Id)
     .input('Title', sql.NVarChar, order.Title)
     .input('Quantity', sql.Int, order.Quantity)
-    .input('Messages', sql.NVarChar, order.Message)
+    .input('Message', sql.NVarChar, order.Message)
     .input('City', sql.NVarChar, order.City)
-    .query(`INSERT INTO Orders (Id, Title, Quantity, Messages, City)
-            VALUES (@Id, @Title, @Quantity, @Messages, @City)`);
+    .query(`INSERT INTO Orders (Id, Title, Quantity, Message, City)
+            VALUES (@Id, @Title, @Quantity, @Message, @City)`);
     return  insertProduct.recordsets;
   }
   catch (err) {
