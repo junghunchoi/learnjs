@@ -102,9 +102,13 @@ var PracEditorApp = (function () {
     $previewButton.textContent = "미리보기";
     $previewButton.addEventListener("click", function () {
       var options = "toolbar=no,scrollbars=no,resizable=yes,status=no,menubar=no,width=1200, height=800, top=0,left=0"
-      // window.open("","_blank",options)
-      $preview.innerHTML = editorArea.innerHTML;
-      console.log(getHTML());
+      var openWin = window.open("preview.html", "preview","width=570, height=570");
+      openWin.onload = function () {
+        openWin.document.getElementById("previewArea").innerHTML = getHTML();
+      }
+
+      // $preview.innerHTML = editorArea.innerHTML;
+
     });
 
     $mainArea.appendChild($previewButton);
@@ -222,17 +226,19 @@ var PracEditorApp = (function () {
 
   function getHTML() {
     var editorAreaHTML = document.querySelectorAll(".editorArea > *")
+    var convertHTML = ""
 
     for (var i = 0; i < editorAreaHTML.length; i++) {
-      if(editorAreaHTML[i].nodeName ==='P'){
-      editorAreaHTML[i].style["ine-height"] = 1.2;
-      editorAreaHTML[i].style["margin-top"] = "0px";
-      editorAreaHTML[i].style["margin-bottom"] = "0px";
+      if (editorAreaHTML[i].nodeName === 'P') {
+        editorAreaHTML[i].style["line-height"] = 1.2;
+        editorAreaHTML[i].style["margin-top"] = "0px";
+        editorAreaHTML[i].style["margin-bottom"] = "0px";
       }
+      convertHTML += editorAreaHTML[i].outerHTML
     }
 
-    console.log(editorAreaHTML)
-    return editorAreaHTML;
+    console.log(convertHTML)
+    return convertHTML;
   }
 
   return {

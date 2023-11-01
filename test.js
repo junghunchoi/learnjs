@@ -1,10 +1,20 @@
-import sql from "mssql/msnodesqlv8.js";
-
-// Connect to SQL Server using Windows Auth
-const conn = new sql.ConnectionPool({
-    connectionString:
-        "Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes",
-});
+// import sql from "mssql/msnodesqlv8.js";
+// import express from 'express';
+//
+// // Connect to SQL Server using Windows Auth
+// const conn = new sql.ConnectionPool({
+//     connectionString:
+//         "Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes",
+// });
+//
+// async () =>{
+//     try{
+//         await conn.connect(`Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes`)
+//         let result = await sql.query(`select * from checktable`);
+//     }catch (err){
+//         console.log(err)
+//     }
+// }
 
 // conn.connect()
 //     .then(function () {
@@ -15,16 +25,16 @@ const conn = new sql.ConnectionPool({
 //     }
 //     );
 
-console.log("Starting...");
-connectAndQuery();
+import sql from "mssql/msnodesqlv8.js"
 
-async function connectAndQuery() {
+async () => {
     try {
-        // var poolConnection = await sql.connect(conn);
-        var resultSet = await conn.request().query(`select * from checktable`);
-
-        console.log(`${resultSet.recordset.length} rows returned`);
+        // make sure that any items are correctly URL encoded in the connection string
+        await sql.connect('Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes')
+        const result = await sql.query`select * from checktable`
+        console.log("??");
+        console.dir(result)
     } catch (err) {
-        console.log(err);
+        console.log(err)
     }
 }

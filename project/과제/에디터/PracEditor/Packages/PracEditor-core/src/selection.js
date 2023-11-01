@@ -74,22 +74,6 @@ var selectionModule = (function () {
             endNode = endNode.parentNode;
         }
 
-        var currentNode = startNode;
-
-        while (currentNode && currentNode !== endNode) {
-            if (currentNode.tagName === "P") {
-                // 원하는 DOM 요소 또는 스타일 추가
-                currentNode.style.color = "red"; // 예: 텍스트 색상을 빨간색으로 변경
-
-                // 예: 각 p 태그 끝에 span 요소 추가
-                var span = document.createElement("span");
-                span.textContent = " [added]";
-                currentNode.appendChild(span);
-            }
-
-            // 다음 노드 참조
-            currentNode = currentNode.nextElementSibling;
-        }
 
 
         // 하나의 태그 안에 전체 텍스트를 선택한 경우
@@ -169,23 +153,6 @@ var selectionModule = (function () {
             endNode = endNode.parentNode;
         }
 
-        var currentNode = startNode;
-
-        // 시작 노드부터 종료 노드까지 순회
-        while (currentNode && currentNode !== endNode) {
-            if (currentNode.tagName === "P") {
-                // 원하는 DOM 요소 또는 스타일 추가
-                currentNode.style.color = "red"; // 예: 텍스트 색상을 빨간색으로 변경
-
-                // 예: 각 p 태그 끝에 span 요소 추가
-                var span = document.createElement("span");
-                span.textContent = " [added]";
-                currentNode.appendChild(span);
-            }
-
-            // 다음 노드 참조
-            currentNode = currentNode.nextElementSibling;
-        }
 
 
     }
