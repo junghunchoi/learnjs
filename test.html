@@ -7,41 +7,30 @@
     <link rel="stylesheet" href="./test.css">
 </head>
 <body>
-   
-    <b id="p">Select me: <i>italic</i> and <b>bold</b></b>
+<form enctype="multipart/form-data" action="/upload" method="post">
+    <input type="file" name="file">
+    <input type="submit" value="Upload">
+</form>
 
 
-Cloned: <span id="cloned"></span>
-<br>
-As text: <span id="astext"></span>
-<button onclick="execute()">Click Me</button>
+  <script>
+      document.querySelector('form').addEventListener('submit', function(e) {
+          e.preventDefault();
 
-<script>
-  document.onselectionchange = function() {
-    let selection = document.getSelection();
-    let range = selection.getRangeAt(0)
-    cloned.innerHTML = astext.innerHTML = "";
-
-    // Clone DOM nodes from ranges (we support multiselect here)
-    for (let i = 0; i < selection.rangeCount; i++) {
-      cloned.append(selection.getRangeAt(i).cloneContents());
-      
-    }
-    // console.log("range : ",range.startContainer);
-    // console.log(range.cloneContents());
-
-    var ccc = range.cloneContents()
-    var childNodes = ccc.childNodes;
-    
-    for (var i = 0; i < childNodes.length; i++) {
-            if (childNodes[i].nodeType === 1) {  // Element Node
-              console.log(childNodes[i]);
-                console.log(childNodes[i].textContent);
-            }
-        }
-
-  };
- 
-</script>
+          let formData = new FormData(e.target);
+          fetch('/upload', {
+              method: 'POST',
+              body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+              console.log(data.message);
+          })
+          .catch(error => {
+              console.error('Error:', error);
+          });
+      });
+  </script>
+<script src="uploadtest.js"></script>
 </body>
 </html>
