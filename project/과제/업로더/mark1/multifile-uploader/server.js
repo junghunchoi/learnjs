@@ -44,6 +44,8 @@ const getFilePath = (fileName, fileId) => `./uploads/file-${fileId}-${fileName}`
 app.use(express.json());
 app.use(cors());
 
+// 파일 업로드 함수
+// 유니크한 아아디를 붙인 다음 저장.
 app.post('/upload-request', (req, res) => {
 	if (!req.body || !req.body.fileName) {
 		res.status(400).json({message: 'Missing "fileName"'});
@@ -54,6 +56,7 @@ app.post('/upload-request', (req, res) => {
 	}
 });
 
+// 진행상태 받아옴
 app.get('/upload-status', (req, res) => {
 	if(req.query && req.query.fileName && req.query.fileId) {
 		getFileDetails(getFilePath(req.query.fileName, req.query.fileId))
@@ -80,7 +83,8 @@ app.post('/upload', (req, res) => {
 		console.log('Missing File Id');
 		return res.status(400).json({message: 'Missing "X-File-Id" header'});
 	}
-	
+
+	//청크로 업로드 할 때 필요한 코드로
 	const match = contentRange.match(/bytes=(\d+)-(\d+)\/(\d+)/);
 	
 	if(!match) {
