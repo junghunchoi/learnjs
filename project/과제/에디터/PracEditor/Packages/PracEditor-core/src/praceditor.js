@@ -1,4 +1,3 @@
-// 전역변수로 사용
 var PracEditorApp = (function () {
 
   function updateGlobalEditorObject(updates) {
@@ -254,6 +253,7 @@ var PracEditorApp = (function () {
 }());
 
 var editor = new PracEditorApp.PracEditor();
+
 var GlobalEditorObject = {
   font: "",
   color: "black",
@@ -262,3 +262,4 @@ var GlobalEditorObject = {
   isbold: false,
   isunderline: false,
 };
+
