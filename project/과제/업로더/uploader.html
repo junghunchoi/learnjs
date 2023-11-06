@@ -7,14 +7,36 @@
 </head>
 <body>
 
-<div>
+<div style="display: flex; flex-direction: column; align-items:center">
+  <label class = "upload-btn">
+    파일추가하기
+    <input type="file" multiple id="fileAddBtn" name="file" style="display: none"/>
+  </label>
+
   <div id="uploaderArea">
-    <div id="fileUploader">파일을 끌어다 놓으세요</div>
+    파일을 끌어다 놓으세요
+    <div id="fileUploader"></div>
   </div>
-  <div id="fileListArea"></div>
+  <button id="fileUploadBtn" style="width: 100px">업로드</button>
+  <div style="border: solid 1px black; height: 20px; width: 300px " id="fileListArea"></div>
 </div>
 <script src="uploader.js"></script>
-<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<!--<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>-->
 
 </body>
 </html>
+<!--<!DOCTYPE html>-->
+<!--<html lang="ko">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <title>파일 업로드</title>-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<input type="file" id="fileInput" multiple>-->
+<!--<button id="uploadBtn">업로드</button>-->
+<!--<ol id="fileList"></ol>-->
+
+<!--<script src="app.js"></script>-->
+<!--</body>-->
+<!--</html>-->

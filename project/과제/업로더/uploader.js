@@ -1,5 +1,8 @@
 const dropbox = document.querySelector('#uploaderArea');
 const input_filename = document.querySelector('#fileUploader');
+var $fileAddBtn = document.getElementById("fileAddBtn")
+var $fileUploadBtn = document.getElementById("fileUploadBtn")
+const globalFileObject = []
 
 //박스 안에 drag 하고 있을 때
 dropbox.addEventListener('dragover', function (e) {
@@ -15,15 +18,14 @@ dropbox.addEventListener('dragleave', function (e) {
 //박스 안에 drop 했을 때
 dropbox.addEventListener('drop', function (e) {
   e.preventDefault();
-  this.style.backgroundColor = 'white';
-  // document.getElementById("fileUploader").textContent = "";
+  this.style.backgroundColor = 'white'
   let fileList = e.dataTransfer.files
 
-  console.log(fileList)
   for (var i = 0; i < fileList.length; i++) {
     input_filename.appendChild(makeFileList(fileList[i]))
+    globalFileObject.push(fileList[i])
   }
-
+   document.getElementById("uploaderArea").childNodes[0].data="";
 });
 
 function getByteSize(size) {
@@ -39,7 +41,7 @@ function getByteSize(size) {
 }
 
 function makeFileList(file) {
-  var $span = document.createElement('span');
+  var $span = document.createElement('div');
   var $fileSize_span = document.createElement('span');
   var $fileName_span = document.createElement('span');
   var fileSize = getByteSize(file.size)
@@ -56,3 +58,17 @@ function makeFileList(file) {
 
   return $span;
 }
+
+$fileAddBtn.addEventListener("change", function (e){
+  e.preventDefault();
+  this.style.backgroundColor = 'white'
+  let fileList = e.target.files;
+
+
+  for (var i = 0; i < fileList.length; i++) {
+    input_filename.appendChild(makeFileList(fileList[i]))
+    globalFileObject.push(fileList[i])
+  }
+
+  document.getElementById("uploaderArea").childNodes[0].data="";
+})

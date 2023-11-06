@@ -1,12 +1,9 @@
 /*
-모듈 임포트: 필요한 라이브러리와 모듈들을 가져옵니다.
-
 express: 웹 서버를 구축하기 위한 프레임워크
 cors: Cross-Origin Resource Sharing을 위한 미들웨어
 fs: 파일 시스템 작업을 위한 라이브러리
 promisify: 콜백 패턴을 프로미스 패턴으로 바꾸기 위한 유틸리티
 busboy: 멀티파트 폼 데이터를 파싱하기 위한 라이브러리
-유틸리티 함수:
 
 uniqueAlphaNumericId: 랜덤한 알파뉴메릭 ID를 생성하는 함수
 getFilePath: 파일의 경로를 생성하는 함수
@@ -19,7 +16,6 @@ getFilePath: 파일의 경로를 생성하는 함수
 /upload: 파일의 청크를 업로드하는 엔드포인트. 'Content-Range' 및 'X-File-Id' 헤더를 기반으로 파일 청크를 저장합니다.
 서버 시작: 1234 포트에서 서버를 실행합니다.
 
-이 코드는 청크 기반의 파일 업로드 시스템을 구현한 것입니다. 사용자는 파일을 여러 청크로 나눠 서버에 업로드할 수 있으며, 서버는 이 청크들을 조합하여 원본 파일을 재생성합니다.
  */
 
 
@@ -47,6 +43,7 @@ app.use(cors());
 // 파일 업로드 함수
 // 유니크한 아아디를 붙인 다음 저장.
 app.post('/upload-request', (req, res) => {
+	console.log('upload-request')
 	if (!req.body || !req.body.fileName) {
 		res.status(400).json({message: 'Missing "fileName"'});
 	} else {
@@ -54,6 +51,7 @@ app.post('/upload-request', (req, res) => {
 		fs.createWriteStream(getFilePath(req.body.fileName, fileId), {flags: 'w'});
 		res.status(200).json({fileId});
 	}
+
 });
 
 // 진행상태 받아옴
@@ -71,6 +69,7 @@ app.get('/upload-status', (req, res) => {
 });
 
 app.post('/upload', (req, res) => {
+	console.log("/upload")
 	const contentRange = req.headers['content-range'];
 	const fileId = req.headers['x-file-id'];
 	
@@ -83,9 +82,9 @@ app.post('/upload', (req, res) => {
 		console.log('Missing File Id');
 		return res.status(400).json({message: 'Missing "X-File-Id" header'});
 	}
-
+console.log("contentRange", contentRange)
 	//청크로 업로드 할 때 필요한 코드로
-	const match = contentRange.match(/bytes=(\d+)-(\d+)\/(\d+)/);
+	const match = contentRange.match(/bytes=(\d+)-(\d+)\/(\d+)/); // ["bytes=200-999/1200", "200", "999", "1200"]
 	
 	if(!match) {
 		console.log('Invalid Content-Range Format');
@@ -116,7 +115,7 @@ app.post('/upload', (req, res) => {
 						.status(400)
 						.json({message: 'Bad "chunk" provided'});
 				}
-				
+				console.log(filePath)
 				file
 					.pipe(fs.createWriteStream(filePath, {flags: 'a'}))
 					.on('error', (e) => {

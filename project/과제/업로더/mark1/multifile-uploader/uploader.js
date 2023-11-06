@@ -1,3 +1,26 @@
+/*
+uploadFiles 함수
+여러 파일을 동시에 업로드하는 기능을 제공합니다.
+uploadFile 함수로 각 파일의 초기 업로드를 시작합니다.
+uploadFileChunks는 서버에 파일의 조각을 전송합니다.
+업로드 중단, 재시도, 정지, 계속 기능을 제공합니다.
+
+uploadAndTrackFiles 함수
+업로드할 파일을 받아 UI를 통해 진행 상황을 추적합니다.
+각 파일에 대한 상태 업데이트와 진행 상황 표시를 관리합니다.
+파일의 업로드 상태(예: 대기 중, 업로드 중, 일시 중지, 완료, 실패)에 따라 UI 요소를 업데이트합니다.
+
+이벤트 리스너
+파일 입력(fileInput)에 변경사항이 발생하면 uploadAndTrackFiles 함수를 호출하여
+선택된 파일들의 업로드를 시작합니다.
+
+프로그레스 박스 UI
+현재 업로드 상태를 표시하는 HTML 요소를 생성하고, 업로드 진행 상태에 따라 UI를 업데이트합니다.
+
+콜백 함수들(onComplete, onProgress, onError, onAbort)
+업로드의 각 단계에 대한 콜백을 제공합니다.
+ */
+
 const uploadFiles = (() => {
 	const fileRequests = new WeakMap();
 	const ENDPOINTS = {
@@ -14,22 +37,22 @@ const uploadFiles = (() => {
 		onError() {},
 		onComplete() {}
 	};
+
 	
 	const uploadFileChunks = (file, options) => {
 		const formData = new FormData();
 		const req = new XMLHttpRequest();
 		const chunk = file.slice(options.startingByte);
-		
+
 		formData.append('chunk', chunk, file.name);
 		formData.append('fileId', options.fileId);
-		
+
+
 		req.open('POST', options.url, true);
 		req.setRequestHeader('Content-Range', `bytes=${options.startingByte}-${options.startingByte+chunk.size}/${file.size}`);
 		req.setRequestHeader('X-File-Id', options.fileId);
 		
 		req.onload = (e) => {
-			// it is possible for load to be called when the request status is not 200
-			// this will treat 200 only as success and everything else as failure
 			if (req.status === 200) {
 				options.onComplete(e, file);
 			} else {
@@ -53,7 +76,7 @@ const uploadFiles = (() => {
 		req.onerror = (e) => options.onError(e, file);
 		
 		fileRequests.get(file).request = req;
-		
+
 		req.send(formData);
 	};
 	
@@ -157,8 +180,9 @@ const uploadAndTrackFiles = (() => {
 		FAILED: 'failed'
 	}
 	let uploader = null;
+
 	
-	progressBox.className = 'upload-progress-tracker';
+	progressBox.className = 'upload-progress-tracker expanded';
 	progressBox.innerHTML = `
 				<h3>Uploading 0 Files</h3>
 				<p class="upload-progress">
@@ -167,19 +191,13 @@ const uploadAndTrackFiles = (() => {
 					<span class="failed-count">0</span>
 					<span class="paused-count">0</span>
 				</p>
-				<button type="button" class="maximize-btn">Maximize</button>
 				<div class="uploads-progress-bar" style="width: 0;"></div>
 				<div class="file-progress-wrapper"></div>
 			`;
-	
-	progressBox
-		.querySelector('.maximize-btn')
-		.addEventListener('click', (e) => {
-			e.currentTarget.classList.toggle('expanded');
-			progressBox.classList.toggle('expanded');
-		})
+
 	
 	const updateProgressBox = () => {
+		console.log("updateProgressBox")
 		const [title, uploadProgress, expandBtn, progressBar] = progressBox.children;
 		
 		if (files.size > 0) {
@@ -202,7 +220,7 @@ const uploadAndTrackFiles = (() => {
 					} else {
 						totalUploadingFiles += 1;
 					}
-					
+					console.log("fileObj", fileObj)
 					totalChunkSize += fileObj.size;
 					totalUploadedChunkSize += fileObj.uploadedChunkSize;
 				}
@@ -347,6 +365,7 @@ const uploadAndTrackFiles = (() => {
 const fileInput = document.getElementById('file-upload-input');
 
 fileInput.addEventListener('change', e => {
+	debugger;
 	uploadAndTrackFiles(e.currentTarget.files)
 	e.currentTarget.value = '';
 })
