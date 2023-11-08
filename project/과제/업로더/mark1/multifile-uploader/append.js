@@ -59,7 +59,6 @@ function makeFileList(file) {
 
 $fileAddBtn.addEventListener("change", function (e) {
   e.preventDefault();
-  console.log("change")
   this.style.backgroundColor = 'white'
   let fileList = e.target.files;
 

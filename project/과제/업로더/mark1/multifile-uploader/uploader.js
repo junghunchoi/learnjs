@@ -1,25 +1,3 @@
-/*
-uploadFiles 함수
-여러 파일을 동시에 업로드하는 기능을 제공합니다.
-uploadFile 함수로 각 파일의 초기 업로드를 시작합니다.
-uploadFileChunks는 서버에 파일의 조각을 전송합니다.
-업로드 중단, 재시도, 정지, 계속 기능을 제공합니다.
-
-uploadAndTrackFiles 함수
-업로드할 파일을 받아 UI를 통해 진행 상황을 추적합니다.
-각 파일에 대한 상태 업데이트와 진행 상황 표시를 관리합니다.
-파일의 업로드 상태(예: 대기 중, 업로드 중, 일시 중지, 완료, 실패)에 따라 UI 요소를 업데이트합니다.
-
-이벤트 리스너
-파일 입력(fileInput)에 변경사항이 발생하면 uploadAndTrackFiles 함수를 호출하여
-선택된 파일들의 업로드를 시작합니다.
-
-프로그레스 박스 UI
-현재 업로드 상태를 표시하는 HTML 요소를 생성하고, 업로드 진행 상태에 따라 UI를 업데이트합니다.
-
-콜백 함수들(onComplete, onProgress, onError, onAbort)
-업로드의 각 단계에 대한 콜백을 제공합니다.
- */
 const globalFileList = []
 
 const uploadFiles = (() => {
@@ -39,7 +17,9 @@ const uploadFiles = (() => {
 		onComplete() {}
 	};
 
-	
+	// xmlHttpRequest의 정보를 셋팅하고
+	// 상황별 함수를 구현하고
+	// 서버에 업로드를 요청한다.
 	const uploadFileChunks = (file, options) => {
 		const formData = new FormData();
 		const req = new XMLHttpRequest();
@@ -69,7 +49,7 @@ const uploadFiles = (() => {
 				percentage: loaded * 100 / file.size
 			}, file);
 		}
-		
+
 		req.ontimeout = (e) => options.onError(e, file);
 		
 		req.onabort = (e) => options.onAbort(e, file);
@@ -80,7 +60,10 @@ const uploadFiles = (() => {
 
 		req.send(formData);
 	};
-	
+
+	//임시로 파일을 생성하도록 요청한다.
+	//upload_request의 설정 셋팅
+	//임시파일을 만들 수 있도록 body에 파일명 전송
 	const uploadFile = (file, options) => {
 		return fetch(ENDPOINTS.UPLOAD_REQUEST, {
 			method: 'POST',
@@ -91,16 +74,17 @@ const uploadFiles = (() => {
 				fileName: file.name,
 			})
 		})
-			.then(res => res.json())
-			.then(res => {
-				options = {...options, ...res};
-				fileRequests.set(file, {request: null, options});
-				
-				uploadFileChunks(file, options);
-			})
-			.catch(e => {
-				options.onError({...e, file})
-			})
+		.then(
+				res => res.json())
+		.then(res => {
+			options = {...options, ...res};
+			fileRequests.set(file, {request: null, options});
+
+			uploadFileChunks(file, options);
+		})
+		.catch(e => {
+			options.onError({...e, file})
+		});
 	}
 	
 	const abortFileUpload = async file => {
@@ -118,7 +102,6 @@ const uploadFiles = (() => {
 		const fileReq = fileRequests.get(file);
 		
 		if (fileReq) {
-			// try to get the status just in case it failed mid upload
 			return fetch(`${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileId=${fileReq.options.fileId}`)
 				.then(res => res.json())
 				.then(res => { // if uploaded we continue
@@ -157,7 +140,8 @@ const uploadFiles = (() => {
 				})
 		}
 	}
-	
+
+	//uploadFiles return
 	return (files, options = defaultOptions) => {
 		[...files].forEach(file => uploadFile(file, {...defaultOptions, ...options}));
 		
@@ -182,7 +166,7 @@ const uploadAndTrackFiles = (() => {
 	}
 	let uploader = null;
 
-	
+
 	progressBox.className = 'upload-progress-tracker expanded';
 	progressBox.innerHTML = `
 				<h3>Uploading 0 Files</h3>
@@ -193,12 +177,11 @@ const uploadAndTrackFiles = (() => {
 					<span class="paused-count">0</span>
 				</p>
 				<div class="uploads-progress-bar" style="width: 0;"></div>
-				<div class="file-progress-wrapper"></div>
+				<div class="file-progress-wrapper" style="width: 100%"></div>
 			`;
 
 	
 	const updateProgressBox = () => {
-		console.log("updateProgressBox")
 		const [title, uploadProgress, expandBtn, progressBar] = progressBox.children;
 		
 		if (files.size > 0) {
@@ -221,7 +204,6 @@ const uploadAndTrackFiles = (() => {
 					} else {
 						totalUploadingFiles += 1;
 					}
-					console.log("fileObj", fileObj)
 					totalChunkSize += fileObj.size;
 					totalUploadedChunkSize += fileObj.uploadedChunkSize;
 				}
@@ -236,7 +218,7 @@ const uploadAndTrackFiles = (() => {
 			successCount.textContent = totalUploadedFiles;
 			failedCount.textContent = totalFailedFiles;
 			pausedCount.textContent = totalPausedFiles;
-			progressBar.style.width = `${percentage}%`;
+			// progressBar.style.width = `${percentage}%`;
 			progressBox.style.backgroundSize = `${percentage}%`;
 			expandBtn.style.display = 'inline-block';
 			uploadProgress.style.display = 'block';
@@ -254,8 +236,6 @@ const uploadAndTrackFiles = (() => {
 			{children: [{children: [status]}, progressBar]}, // .file-details
 			{children: [retryBtn, pauseBtn, resumeBtn, clearBtn]} // .file-actions
 		] = fileObject.element.children;
-
-		console.log(fileObject.element.children);
 		
 		requestAnimationFrame(() => {
 			status.textContent = fileObject.status === FILE_STATUS.COMPLETED ? fileObject.status : `${Math.round(fileObject.percentage)}%`;
@@ -325,6 +305,7 @@ const uploadAndTrackFiles = (() => {
 	}
 	
 	const onProgress = (e, file) => {
+		console.log(e.loaded)
 		const fileObj = files.get(file);
 		
 		fileObj.status = FILE_STATUS.UPLOADING;
@@ -365,12 +346,27 @@ const uploadAndTrackFiles = (() => {
 	}
 })();
 
-const fileInput = document.getElementById('file-upload-input');
+const fileInput = document.getElementsByClassName('upload-btn');
 
-fileInput.addEventListener('click', e => {
+fileInput[0].addEventListener('click', e => {
 	debugger;
-	uploadAndTrackFiles(globalFileList)
+	e.preventDefault();
+
+	if (globalFileList.length === 0) {
+		alert("파일을 첨부한 후 전송버튼을 눌러주세요.")
+		return;
+	}
+
+	uploadAndTrackFiles(globalFileList);
 	e.currentTarget.value = '';
 	globalFileList.length = 0;
 })
 
+document.addEventListener('DOMContentLoaded', function() {
+	fetch('http://localhost:1234/files')
+	.then(response => response.json())
+	.then(files => {
+		console.log(files)
+	})
+	.catch(error => console.error('Error fetching files:', error));
+});
