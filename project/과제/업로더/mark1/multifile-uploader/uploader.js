@@ -20,6 +20,7 @@ uploadAndTrackFiles 함수
 콜백 함수들(onComplete, onProgress, onError, onAbort)
 업로드의 각 단계에 대한 콜백을 제공합니다.
  */
+const globalFileList = []
 
 const uploadFiles = (() => {
 	const fileRequests = new WeakMap();
@@ -253,6 +254,8 @@ const uploadAndTrackFiles = (() => {
 			{children: [{children: [status]}, progressBar]}, // .file-details
 			{children: [retryBtn, pauseBtn, resumeBtn, clearBtn]} // .file-actions
 		] = fileObject.element.children;
+
+		console.log(fileObject.element.children);
 		
 		requestAnimationFrame(() => {
 			status.textContent = fileObject.status === FILE_STATUS.COMPLETED ? fileObject.status : `${Math.round(fileObject.percentage)}%`;
@@ -364,8 +367,10 @@ const uploadAndTrackFiles = (() => {
 
 const fileInput = document.getElementById('file-upload-input');
 
-fileInput.addEventListener('change', e => {
+fileInput.addEventListener('click', e => {
 	debugger;
-	uploadAndTrackFiles(e.currentTarget.files)
+	uploadAndTrackFiles(globalFileList)
 	e.currentTarget.value = '';
+	globalFileList.length = 0;
 })
+

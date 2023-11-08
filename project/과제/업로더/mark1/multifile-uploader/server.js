@@ -9,12 +9,6 @@ uniqueAlphaNumericId: 랜덤한 알파뉴메릭 ID를 생성하는 함수
 getFilePath: 파일의 경로를 생성하는 함수
 미들웨어 설정: 서버에 JSON 처리 및 CORS 미들웨어를 적용합니다.
 
-엔드포인트 정의:
-
-/upload-request: 파일 업로드 요청을 받아, 해당 파일에 대한 유니크한 ID를 생성하고 클라이언트에 반환합니다.
-/upload-status: 주어진 파일 이름과 ID로 해당 파일의 현재 업로드 상태(크기)를 반환합니다.
-/upload: 파일의 청크를 업로드하는 엔드포인트. 'Content-Range' 및 'X-File-Id' 헤더를 기반으로 파일 청크를 저장합니다.
-서버 시작: 1234 포트에서 서버를 실행합니다.
 
  */
 
@@ -40,10 +34,8 @@ const getFilePath = (fileName, fileId) => `./uploads/file-${fileId}-${fileName}`
 app.use(express.json());
 app.use(cors());
 
-// 파일 업로드 함수
-// 유니크한 아아디를 붙인 다음 저장.
+
 app.post('/upload-request', (req, res) => {
-	console.log('upload-request')
 	if (!req.body || !req.body.fileName) {
 		res.status(400).json({message: 'Missing "fileName"'});
 	} else {

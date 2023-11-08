@@ -1,40 +1,25 @@
-// import sql from "mssql/msnodesqlv8.js";
-// import express from 'express';
-//
-// // Connect to SQL Server using Windows Auth
-// const conn = new sql.ConnectionPool({
-//     connectionString:
-//         "Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes",
-// });
-//
-// async () =>{
-//     try{
-//         await conn.connect(`Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes`)
-//         let result = await sql.query(`select * from checktable`);
-//     }catch (err){
-//         console.log(err)
-//     }
-// }
+const a = {}
+a.b; // a가 객체이므로 문제없음
 
-// conn.connect()
-//     .then(function () {
-//       console.log("Connected to SQL Server");
-//     })
-//     .catch(function (err) {
-//       console.log(err);
-//     }
-//     );
-
-import sql from "mssql/msnodesqlv8.js"
-
-async () => {
-    try {
-        // make sure that any items are correctly URL encoded in the connection string
-        await sql.connect('Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;TrustServerCertificate=yes')
-        const result = await sql.query`select * from checktable`
-        console.log("??");
-        console.dir(result)
-    } catch (err) {
-        console.log(err)
-    }
+const c = null;
+try {
+  c.d;
+} catch (e) {
+  console.error(e); // TypeError: Cannot read properties of null (reading 'd')
 }
+console.log()
+c?.d; // 문제없음
+//
+// try {
+//     c.f();
+// } catch (e) {
+//     console.error(e); // TypeError: Cannot read properties of null (reading 'f')
+// }
+// c?.f(); // 문제없음
+//
+// try {
+//     c[0];
+// } catch (e) {
+//     console.error(e); // TypeError: Cannot read properties of null (reading '0')
+// }
+// c?.[0]; // 문제없음

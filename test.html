@@ -7,30 +7,31 @@
     <link rel="stylesheet" href="./test.css">
 </head>
 <body>
-<form enctype="multipart/form-data" action="/upload" method="post">
-    <input type="file" name="file">
-    <input type="submit" value="Upload">
-</form>
 
 
-  <script>
-      document.querySelector('form').addEventListener('submit', function(e) {
-          e.preventDefault();
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+  const formData = new FormData();
+  formData.append('name','junghun')
+  console.log(formData)
+  formData.append('item', 'orange');
+  formData.append('item', 'melon');
+  console.log(formData)
+  formData.set('item', 'apple'); // 기존 데이터 밀어버리고 value로 업데이트
 
-          let formData = new FormData(e.target);
-          fetch('/upload', {
-              method: 'POST',
-              body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-              console.log(data.message);
-          })
-          .catch(error => {
-              console.error('Error:', error);
-          });
-      });
-  </script>
-<script src="uploadtest.js"></script>
+
+  (async () => {
+    try {
+      const formData = new FormData();
+      formData.append('name', 'zerocho');
+      formData.append('birth', 1994);
+      const result = await axios.post('https://www.zerocho.com/api/post/formdata', formData);
+      console.log(result);
+      console.log(result.data);
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+</script>
 </body>
 </html>
