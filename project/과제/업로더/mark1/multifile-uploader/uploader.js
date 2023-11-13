@@ -17,9 +17,7 @@ const uploadFiles = (() => {
 		onComplete() {}
 	};
 
-	// xmlHttpRequest의 정보를 셋팅하고
-	// 상황별 함수를 구현하고
-	// 서버에 업로드를 요청한다.
+
 	const uploadFileChunks = (file, options) => {
 		const formData = new FormData();
 		const req = new XMLHttpRequest();
@@ -27,18 +25,19 @@ const uploadFiles = (() => {
 
 		formData.append('chunk', chunk, file.name);
 		formData.append('fileId', options.fileId);
-
+		setDownloadProgress(file.name, `${options.startingByte}|${options.startingByte+chunk.size}|${file.size}`);
 
 		req.open('POST', options.url, true);
 		req.setRequestHeader('Content-Range', `bytes=${options.startingByte}-${options.startingByte+chunk.size}/${file.size}`);
-		req.setRequestHeader('X-File-Id', options.fileId);
-		
+		req.setRequestHeader('X-File-Id', encodeURI(options.fileId));
+
 		req.onload = (e) => {
 			if (req.status === 200) {
 				options.onComplete(e, file);
 			} else {
 				options.onError(e, file);
 			}
+			clearDownloadProgress(encodeURI(options.fileId));
 		}
 		
 		req.upload.onprogress = (e) => {
@@ -58,7 +57,12 @@ const uploadFiles = (() => {
 		
 		fileRequests.get(file).request = req;
 
+
 		req.send(formData);
+
+		window.addEventListener('beforeunload', () => {
+			setDownloadProgress(file.name, `${options.startingByte}|${options.startingByte+chunk.size}|${file.size}`);
+		});
 	};
 
 	//임시로 파일을 생성하도록 요청한다.
@@ -77,7 +81,10 @@ const uploadFiles = (() => {
 		.then(
 				res => res.json())
 		.then(res => {
+
 			options = {...options, ...res};
+			options.fileId = options.fileName;
+			delete options.fileName;
 			fileRequests.set(file, {request: null, options});
 
 			uploadFileChunks(file, options);
@@ -261,7 +268,7 @@ const uploadAndTrackFiles = (() => {
 			<div class="file-details" style="position: relative">
 				<p>
 					<span class="status">pending</span>
-					<span class="file-name">${file.name.substring(0, extIndex)}</span>
+					<span class="file-name">${file.name.slice(25)}</span>
 					<span class="file-ext">${file.name.substring(extIndex)}</span>
 				</p>
 				<div class="progress-bar" style="width: 0;"></div>
@@ -296,12 +303,17 @@ const uploadAndTrackFiles = (() => {
 	}
 	
 	const onComplete = (e, file) => {
+		const element = document.getElementById(file.name);
+		if (element) {
+			element.remove();
+		}
 		const fileObj = files.get(file);
 		
 		fileObj.status = FILE_STATUS.COMPLETED;
 		fileObj.percentage = 100;
-		
+
 		updateFileElement(fileObj);
+		clearDownloadProgress(file.name)
 	}
 	
 	const onProgress = (e, file) => {
@@ -326,13 +338,17 @@ const uploadAndTrackFiles = (() => {
 	
 	const onAbort = (e, file) => {
 		const fileObj = files.get(file);
-		
 		fileObj.status = FILE_STATUS.PAUSED;
+
+		debugger
+
+		setDownloadProgress(file.name, `0|${fileObj.uploadedChunkSize}|${fileObj.size}`);
 		
 		updateFileElement(fileObj);
 	}
 	
 	return (uploadedFiles) => {
+		console.log(uploadedFiles);
 		[...uploadedFiles].forEach(setFileElement);
 		
 		document.body.appendChild(progressBox);
@@ -349,9 +365,8 @@ const uploadAndTrackFiles = (() => {
 const fileInput = document.getElementsByClassName('upload-btn');
 
 fileInput[0].addEventListener('click', e => {
-	debugger;
-	e.preventDefault();
 
+	e.preventDefault();
 	if (globalFileList.length === 0) {
 		alert("파일을 첨부한 후 전송버튼을 눌러주세요.")
 		return;
@@ -362,11 +377,88 @@ fileInput[0].addEventListener('click', e => {
 	globalFileList.length = 0;
 })
 
+// 저장된 파일 리스트 반환
 document.addEventListener('DOMContentLoaded', function() {
+	const $downloadList = document.getElementsByClassName("download-list-area")[0];
 	fetch('http://localhost:1234/files')
 	.then(response => response.json())
 	.then(files => {
-		console.log(files)
+
+		for (let i = 0; i < files.length; i++) {
+			 $downloadList.appendChild(createListElement(files[i]))
+			// console.log(createListElement(files[i]));
+
+		}
 	})
 	.catch(error => console.error('Error fetching files:', error));
 });
+
+// 받아온 리스트를 체크박스로 선택할 수 있는 li로 생성하는 함수
+function createListElement(file) {
+	const ul = document.createElement('ul');
+	const li = document.createElement('li');
+	const convertFileName = file.slice(25);
+
+	li.className = 'list-group-item d-flex justify-content-between align-items-center';
+	li.innerHTML = `
+		<div class="custom-control custom-checkbox">
+			<input type="checkbox" class="custom-control-input" id="${file}" name="file" value="${convertFileName}">
+			<label class="custom-control-label" for="${file}">${convertFileName}</label>
+		</div>
+	`;
+	ul.appendChild(li);
+	return ul;
+}
+
+
+
+document.getElementsByClassName('download-btn')[0].addEventListener('click', e => {
+	return fetch('http://localhost:1234/download', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			fileList: getCheckedFileList()
+		})
+	})
+	.then(response => response.blob())
+	.then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = 'files.zip';
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+
+			}
+	)
+	.catch(error => console.error('Error fetching files:', error));
+});
+
+
+const getCheckedFileList = () => {
+	const checkboxes = document.querySelectorAll(".download-list-area input[type='checkbox']");
+	const checked = Array.from(checkboxes).filter(checkbox => checkbox.checked);
+
+
+	return checked.map(checkbox => checkbox.id);
+}
+
+
+
+// 이어올리기 로컬스토리지
+function setDownloadProgress(fileName, bytesDownloaded) {
+	localStorage.setItem(fileName, bytesDownloaded.toString());
+}
+
+function getDownloadProgress(fileName) {
+	return parseInt(localStorage.getItem(fileName)) || 0;
+}
+
+function clearDownloadProgress(fileName) {
+	localStorage.removeItem(fileName);
+}
+
+

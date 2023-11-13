@@ -1,6 +1,6 @@
 const dropbox = document.querySelector('#uploaderArea');
 const input_filename = document.querySelector('#fileUploader');
-const $fileAddBtn = document.getElementById("fileAddBtn")
+const $fileAddBtn = document.getElementById("fileAddBtn");
 
 //박스 안에 drag 하고 있을 때
 dropbox.addEventListener('dragover', function (e) {
@@ -16,6 +16,9 @@ dropbox.addEventListener('dragleave', function (e) {
 //박스 안에 drop 했을 때
 dropbox.addEventListener('drop', function (e) {
   e.preventDefault();
+  var file = e.dataTransfer.files[0];
+
+
   this.style.backgroundColor = 'white'
   let fileList = e.dataTransfer.files
 
@@ -39,22 +42,23 @@ function getByteSize(size) {
 }
 
 function makeFileList(file) {
-  var $span = document.createElement('div');
+  var $div = document.createElement('div');
   var $fileSize_span = document.createElement('span');
   var $fileName_span = document.createElement('span');
   var fileSize = getByteSize(file.size)
   var fileName = file.name
 
-  $span.style.border = "0.2rem outset";
-  $span.style.borderRadius = "12px"
+  $div.style.border = "0.2rem outset";
+  $div.style.borderRadius = "12px"
+  $div.id = fileName
   $fileName_span.style.margin = "10px"
   $fileSize_span.style.margin = "10px"
   $fileName_span.textContent = fileName
   $fileSize_span.textContent = fileSize
-  $span.appendChild($fileName_span)
-  $span.appendChild($fileSize_span)
+  $div.appendChild($fileName_span)
+  $div.appendChild($fileSize_span)
 
-  return $span;
+  return $div;
 }
 
 $fileAddBtn.addEventListener("change", function (e) {
@@ -64,8 +68,18 @@ $fileAddBtn.addEventListener("change", function (e) {
 
   for (var i = 0; i < fileList.length; i++) {
     input_filename.appendChild(makeFileList(fileList[i]))
-    globalFileList.push(fileList[i])
+    const newFileName = uniqueAlphaNumericId() + '-' + fileList[i].name;
+    globalFileList.push(new File([fileList[i]], newFileName, { type: fileList[i].type }));
   }
 
   document.getElementById("uploaderArea").childNodes[0].data = "";
 })
+
+const uniqueAlphaNumericId = (() => {
+  const heyStack = "0123456789abcdefghijklmnopqrstuvwxyz";
+  const randomInt = () => Math.floor(
+      Math.random() * Math.floor(heyStack.length));
+
+  return (length = 24) => Array.from({length},
+      () => heyStack[randomInt()]).join("");
+})();
