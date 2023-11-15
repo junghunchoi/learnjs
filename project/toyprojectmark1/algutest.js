@@ -1,28 +1,37 @@
+const axios = require("axios")
+const cheerio = require("cheerio")
 
-import axios from 'axios'
-import cheerio from 'cheerio'
-
-const getHtml = async () => {
+const getHTML = async (keyword) =>{
   try {
-    // 1
-    const html = await axios.get("https://www.algumon.com/deal/rank");
-    let ulList = [];
-    // 2
-    const $ = cheerio.load(html.data);
-    // 3
-    const bodyList = $("tr.list");
-    bodyList.map((i, element) => {
-      ulList[i] = {
-        rank: i + 1,
-        // 4
-        title: $(element).find("td.info a.title").text().replace(/\s/g, ""),
-        artist: $(element).find("td.info a.artist").text().replace(/\s/g, ""),
-      };
-    });
-    console.log("bodyList : ", ulList);
-  } catch (error) {
-    console.error(error);
+    return axios.get("https://www.inflearn.com/courses?s=" + encodeURI(keyword));
+  } catch (e){
+    console.log(err)
   }
-};
 
-getHtml();
+}
+
+const parsing = async (keyword) => {
+  const html = await getHTML(keyword);
+
+  const $ = cheerio.load(html.data);
+  const $courseList = $(".course_card_item");
+
+  let courses = [];
+  $courseList.each((idx, node) => {
+    const title = $(node).find(".course_title:eq(0)").text();
+    const instructor = $(node).find(".instructor").text();
+    const price = $(node).find(".price").text();
+    const link = $(node).find(".course_card_front").attr("href");
+
+    courses.push({
+      title,
+      instructor,
+      price,
+      link
+    })
+  });
+
+  console.log(courses)
+}
+
+parsing("자바스크립트");
