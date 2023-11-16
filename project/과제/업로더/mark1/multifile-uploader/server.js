@@ -6,17 +6,10 @@ const Busboy = require('busboy');
 const path = require('path');
 const archiver = require('archiver');
 
+
 const app = express();
 const getFileDetails = promisify(fs.stat);
 
-// const uniqueAlphaNumericId = (() => {
-//   const heyStack = "0123456789abcdefghijklmnopqrstuvwxyz";
-//   const randomInt = () => Math.floor(
-//       Math.random() * Math.floor(heyStack.length));
-//
-//   return (length = 24) => Array.from({length},
-//       () => heyStack[randomInt()]).join("");
-// })();
 
 const getFilePath = (fileName) => `./uploads/${fileName}`;
 
@@ -55,13 +48,19 @@ app.get('/upload-status', (req, res) => {
   }
 });
 
-app.post('/upload',  (req, res) => {
+app.post('/upload', (req, res) => {
   console.log('/upload');
   const contentRange = req.headers['content-range'];
-  const fileName = req.headers['x-file-id'];
+  const fileName = req.headers['x-file-id']
 
-  console.log(req.get('fileName'))
-  console.log(req.body.fileName)
+
+
+  // req.pipe(fs.createWriteStream( `./uploads/${(fileName)}`, { flags: 'a' }))
+  //     .on('error', (e) => {
+  //   console.error('failed upload', e);
+  //   res.sendStatus(500);
+  // });
+
 
   if (!contentRange) {
     console.log('Missing Content-Range');
@@ -90,33 +89,16 @@ app.post('/upload',  (req, res) => {
   }
 
   const busboy = new Busboy({ headers: req.headers });
-  const writeStream = fs.createWriteStream(`./uploads/${fileName}`, { flags: 'a' });
 
   busboy.on('file', (_, file) => {
-    file.pipe(writeStream);
-
-
-    // file.pipe(fs.createWriteStream( `./uploads/${fileName}`, { flags: 'a' }))
-    //     .on('error', (e) => {
-    //   console.error('failed upload', e);
-    //   res.sendStatus(500);
-    // });
-
-    // getFileDetails(filePath)
-    //   .then((stats) => {
-    //     if (stats.size !== rangeStart) {
-    //       return res.status(400).json({ message: 'Bad "chunk" provided' });
-    //     }
-    //     file.pipe(fs.createWriteStream(filePath, { flags: 'a' })).on('error', (e) => {
-    //       console.error('failed upload', e);
-    //       res.sendStatus(500);
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     console.log('No File Match', err);
-    //     res.status(400).json({ message: 'No file with such credentials', credentials: req.query });
-    //   });
+    file
+    .pipe(fs.createWriteStream(`./uploads/${decodeURIComponent(fileName)}`, {flags: 'a'}))
+    .on('error', (e) => {
+      console.error('failed upload', e);
+      res.sendStatus(500);
+    });
   });
+
 
   busboy.on('error', (e) => {
     console.error('failed upload', e);
@@ -127,11 +109,12 @@ app.post('/upload',  (req, res) => {
     res.sendStatus(200);
   });
 
-  req.pipe(busboy);
-
   req.on('close', () => {
     console.log('request closed');
   });
+
+  req.pipe(busboy);
+
 });
 
 app.get('/files', (req, res) => {
@@ -169,14 +152,3 @@ app.post('/download', (req, res) => {
 });
 
 app.listen(1234);
-
-
-
-//
-// app.get('/', (req, res) => {
-//   res.send('Hello World!');
-// });
-//
-// const server = app.listen(5005, '10.10.0.157', () => {
-//   console.log('Server running at http://10.10.0.157:5005/');
-// });

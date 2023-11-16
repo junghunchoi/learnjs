@@ -11,7 +11,6 @@ const uploadFiles = (() => {
     url: ENDPOINTS.UPLOAD,
     startingByte: 0,
     fileName: '',
-    totalChunks: 0,
     onAbort() {},
     onProgress() {},
     onError() {},
@@ -19,12 +18,11 @@ const uploadFiles = (() => {
   };
 
   const uploadFileChunks = (file, options, currentChunkIndex = 0) => {
-    const chunk = file.slice(options.startingByte);
     const chunkSize = 1024 * 1024 * 100; // 청크 크기 설정값 1MB
 
     setDownloadProgress(
-      file.name,
-      `${options.startingByte}|${options.startingByte + chunk.size}|${file.size}`,
+        file.name,
+        `${options.startingByte}|${options.startingByte + chunkSize}|${file.size}`,
     );
 
     // 현재 청크 인덱스 * 파일크기가 파일 사이즈보다
@@ -32,9 +30,25 @@ const uploadFiles = (() => {
       const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
 
       uploadChunk(chunk, currentChunkIndex, file, options)
+
       .then(() => {
-        // 다음 청크 업로드
+            console.log("updateFileElement")
+            updateFileElement({
+              ...options,
+              size: options.startingByte,
+              total: file.size,
+              percentage: options.startingByte * 100 / file.size,
+              element: progressBox
+            }, file)
+          }
+      ).then(() => {
+        console.log("updateProgressBox")
+        updateProgressBox(progressBox);
+      })
+      .then(() => {
+        console.log('Chunk upload complete.')
         uploadFileChunks(file, options, currentChunkIndex + 1);
+        options.startingByte += chunk.size;
       })
       .catch(error => {
         console.error("Chunk upload failed:", error);
@@ -44,21 +58,19 @@ const uploadFiles = (() => {
 
   };
 
-  //
-
   async function uploadChunk(chunk, chunkIndex, file,options) {
     const formData = new FormData();
     formData.append('fileChunk', chunk);
-    formData.append('chunkIndex', chunkIndex);
+    // formData.append('chunkIndex', chunkIndex);
     formData.append('fileName', file.name);
+
     const req = new XMLHttpRequest();
     req.open('POST', options.url, true);
-
     req.setRequestHeader(
-      'Content-Range',
-      `bytes=${options.startingByte}-${options.startingByte + chunk.size}/${file.size}`,
+        'Content-Range',
+        `bytes=${options.startingByte}-${options.startingByte + chunk.size}/${file.size}`,
     );
-    req.setRequestHeader('X-File-Id', file.name.substring(0,24));
+    req.setRequestHeader('X-File-Id', encodeURI(file.name));
 
     req.onload = (e) => {
       if (req.status === 200) {
@@ -78,20 +90,10 @@ const uploadFiles = (() => {
 
     fileRequests.get(file).request = req;
 
-    debugger
-
     req.send(formData);
   }
 
 
-  // window.addEventListener('beforeunload', () => {
-  //   setDownloadProgress(
-  //     file.name,
-  //     `${options.startingByte}|${options.startingByte + chunk.size}|${file.size}`,
-  //   );
-  // });
-
-  //11.14
   const uploadFile = (file, options) => {
     options = { ...options, ...file }; // res = {fileName: "test.txt"}
     fileRequests.set(file, { request: null, options });
@@ -115,20 +117,20 @@ const uploadFiles = (() => {
 
     if (fileReq) {
       return fetch(
-        `${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileName=${fileReq.options.fileName}`,
+          `${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileName=${fileReq.options.fileName}`,
       )
-        .then((res) => res.json())
-        .then((res) => {
-          // if uploaded we continue
-          uploadFileChunks(file, {
-            ...fileReq.options,
-            startingByte: Number(res.totalChunkUploaded),
-          });
-        })
-        .catch(() => {
-          // if never uploaded we start
-          uploadFileChunks(file, fileReq.options);
+      .then((res) => res.json())
+      .then((res) => {
+        // if uploaded we continue
+        uploadFileChunks(file, {
+          ...fileReq.options,
+          startingByte: Number(res.totalChunkUploaded),
         });
+      })
+      .catch(() => {
+        // if never uploaded we start
+        uploadFileChunks(file, fileReq.options);
+      });
     }
   };
 
@@ -150,47 +152,27 @@ const uploadFiles = (() => {
 
     if (fileReq) {
       return fetch(
-        `${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileName=${fileReq.options.fileName}`,
+          `${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileName=${fileReq.options.fileName}`,
       )
-        .then((res) => res.json())
-        .then((res) => {
-          uploadFileChunks(file, {
-            ...fileReq.options,
-            startingByte: Number(res.totalChunkUploaded),
-          });
-        })
-        .catch((e) => {
-          fileReq.options.onError({ ...e, file });
+      .then((res) => res.json())
+      .then((res) => {
+        uploadFileChunks(file, {
+          ...fileReq.options,
+          startingByte: Number(res.totalChunkUploaded),
         });
+      })
+      .catch((e) => {
+        fileReq.options.onError({ ...e, file });
+      });
     }
   };
 
-  //uploadFiles return
-  return (files, options = defaultOptions) => {
-    [...files].forEach((file) => uploadFile(file, { ...defaultOptions, ...options }));
 
-    return {
-      abortFileUpload,
-      retryFileUpload,
-      clearFileUpload,
-      resumeFileUpload,
-    };
-  };
-})();
-
-const uploadAndTrackFiles = (() => {
+  // 업로드 현황 업데이터
   const files = new Map();
   const progressBox = document.createElement('div');
-  const FILE_STATUS = {
-    PENDING: 'pending',
-    UPLOADING: 'uploading',
-    PAUSED: 'paused',
-    COMPLETED: 'completed',
-    FAILED: 'failed',
-  };
-  let uploader = null;
 
-  progressBox.className = 'upload-progress-tracker expanded';
+  progressBox.className = "upload-progress-tracker expanded";
   progressBox.innerHTML = `
 				<h3>Uploading 0 Files</h3>
 				<p class="upload-progress">
@@ -204,6 +186,7 @@ const uploadAndTrackFiles = (() => {
 			`;
 
   const updateProgressBox = () => {
+
     const [title, uploadProgress, expandBtn, progressBar] = progressBox.children;
 
     if (files.size > 0) {
@@ -216,35 +199,34 @@ const uploadAndTrackFiles = (() => {
       const [uploadedPerc, successCount, failedCount, pausedCount] = uploadProgress.children;
 
       files.forEach((fileObj) => {
-        if (fileObj.status === FILE_STATUS.FAILED) {
+        if (fileObj.status === "FAILED") {
           totalFailedFiles += 1;
         } else {
-          if (fileObj.status === FILE_STATUS.COMPLETED) {
+          if (fileObj.status === "COMPLETED") {
             totalUploadedFiles += 1;
-          } else if (fileObj.status === FILE_STATUS.PAUSED) {
+          } else if (fileObj.status === "FILE_STATUS.PAUSED") {
             totalPausedFiles += 1;
           } else {
             totalUploadingFiles += 1;
           }
-          totalChunkSize += fileObj.size;
-          totalUploadedChunkSize += fileObj.uploadedChunkSize;
+          totalChunkSize += fileObj.total;
+          totalUploadedChunkSize += fileObj.size;
         }
       });
 
       const percentage =
-        totalChunkSize > 0
-          ? Math.min(100, Math.round((totalUploadedChunkSize * 100) / totalChunkSize))
-          : 0;
+          totalChunkSize > 0
+              ? Math.min(100, Math.round((totalUploadedChunkSize * 100) / totalChunkSize))
+              : 0;
 
       title.textContent =
-        percentage === 100
-          ? `Uploaded ${totalUploadedFiles} File${totalUploadedFiles !== 1 ? 's' : ''}`
-          : `Uploading ${totalUploadingFiles}/${files.size} File${files.size !== 1 ? 's' : ''}`;
+          percentage === 100
+              ? `Uploaded ${totalUploadedFiles} File${totalUploadedFiles !== 1 ? 's' : ''}`
+              : `Uploading ${totalUploadingFiles}/${files.size} File${files.size !== 1 ? 's' : ''}`;
       uploadedPerc.textContent = `${percentage}%`;
       successCount.textContent = totalUploadedFiles;
       failedCount.textContent = totalFailedFiles;
       pausedCount.textContent = totalPausedFiles;
-      // progressBar.style.width = `${percentage}%`;
       progressBox.style.backgroundSize = `${percentage}%`;
       expandBtn.style.display = 'inline-block';
       uploadProgress.style.display = 'block';
@@ -266,33 +248,163 @@ const uploadAndTrackFiles = (() => {
           },
           progressBar,
         ],
-      }, // .file-details
+      },
       {
         children: [retryBtn, pauseBtn, resumeBtn, clearBtn],
-      }, // .file-actions
+      },
     ] = fileObject.element.children;
 
     requestAnimationFrame(() => {
       status.textContent =
-        fileObject.status === FILE_STATUS.COMPLETED
-          ? fileObject.status
-          : `${Math.round(fileObject.percentage)}%`;
+          fileObject.status === "COMPLETED"
+              ? fileObject.status
+              : `${Math.round(fileObject.percentage)}%`;
       status.className = `status ${fileObject.status}`;
       progressBar.style.width = fileObject.percentage + '%';
       progressBar.style.background =
-        fileObject.status === FILE_STATUS.COMPLETED
-          ? 'green'
-          : fileObject.status === FILE_STATUS.FAILED
-          ? 'red'
-          : '#222';
+          fileObject.status === "COMPLETED"
+              ? 'green'
+              : fileObject.status === "FAILED"
+                  ? 'red'
+                  : '#222';
       pauseBtn.style.display =
-        fileObject.status === FILE_STATUS.UPLOADING ? 'inline-block' : 'none';
-      retryBtn.style.display = fileObject.status === FILE_STATUS.FAILED ? 'inline-block' : 'none';
-      resumeBtn.style.display = fileObject.status === FILE_STATUS.PAUSED ? 'inline-block' : 'none';
+          fileObject.status === "UPLOADING" ? 'inline-block' : 'none';
+      retryBtn.style.display = fileObject.status === "FAILED" ? 'inline-block' : 'none';
+      resumeBtn.style.display = fileObject.status === "PAUSED" ? 'inline-block' : 'none';
       clearBtn.style.display =
-        fileObject.status === FILE_STATUS.COMPLETED || fileObject.status === FILE_STATUS.PAUSED
-          ? 'inline-block'
-          : 'none';
+          fileObject.status === "COMPLETED" || fileObject.status === "PAUSED"
+              ? 'inline-block'
+              : 'none';
+      // updateProgressBox();
+    });
+  };
+  // 업데이트 종료
+
+  //uploadFiles return
+  return (files, options = defaultOptions) => {
+    [...files].forEach((file) => uploadFile(file, { ...defaultOptions, ...options }));
+
+    return {
+      abortFileUpload,
+      retryFileUpload,
+      clearFileUpload,
+      resumeFileUpload,
+    };
+  };
+})();
+
+const uploadAndTrackFiles = (() => {
+  const files = new Map();
+  const progressBox = document.createElement('div');
+  let uploader = null;
+
+  progressBox.className = 'upload-progress-tracker expanded';
+  progressBox.innerHTML = `
+				<h3>Uploading 0 Files</h3>
+				<p class="upload-progress">
+					<span class="uploads-percentage">0%</span>
+					<span class="success-count">0</span>
+					<span class="failed-count">0</span>
+					<span class="paused-count">0</span>
+				</p>
+				<div class="uploads-progress-bar" style="width: 0;"></div>
+				<div class="file-progress-wrapper" style="width: 100%"></div>
+			`;
+
+  const updateProgressBox = () => {
+    console.log('updateProgressBox')
+
+    const [title, uploadProgress, expandBtn, progressBar] = progressBox.children;
+
+    if (files.size > 0) {
+      let totalUploadedFiles = 0;
+      let totalUploadingFiles = 0;
+      let totalFailedFiles = 0;
+      let totalPausedFiles = 0;
+      let totalChunkSize = 0;
+      let totalUploadedChunkSize = 0;
+      const [uploadedPerc, successCount, failedCount, pausedCount] = uploadProgress.children;
+
+      files.forEach((fileObj) => {
+        if (fileObj.status === "FAILED") {
+          totalFailedFiles += 1;
+        } else {
+          if (fileObj.status === "COMPLETED") {
+            totalUploadedFiles += 1;
+          } else if (fileObj.status === "FILE_STATUS.PAUSED") {
+            totalPausedFiles += 1;
+          } else {
+            totalUploadingFiles += 1;
+          }
+          totalChunkSize += fileObj.total;
+          totalUploadedChunkSize += fileObj.size;
+        }
+      });
+
+      const percentage =
+          totalChunkSize > 0
+              ? Math.min(100, Math.round((totalUploadedChunkSize * 100) / totalChunkSize))
+              : 0;
+
+      title.textContent =
+          percentage === 100
+              ? `Uploaded ${totalUploadedFiles} File${totalUploadedFiles !== 1 ? 's' : ''}`
+              : `Uploading ${totalUploadingFiles}/${files.size} File${files.size !== 1 ? 's' : ''}`;
+      uploadedPerc.textContent = `${percentage}%`;
+      successCount.textContent = totalUploadedFiles;
+      failedCount.textContent = totalFailedFiles;
+      pausedCount.textContent = totalPausedFiles;
+      progressBox.style.backgroundSize = `${percentage}%`;
+      expandBtn.style.display = 'inline-block';
+      uploadProgress.style.display = 'block';
+      progressBar.style.display = 'block';
+    } else {
+      title.textContent = 'No Upload in Progress';
+      expandBtn.style.display = 'none';
+      uploadProgress.style.display = 'none';
+      progressBar.style.display = 'none';
+    }
+  };
+
+  const updateFileElement = (fileObject) => {
+    console.log("after ",fileObject)
+    // const [
+    //   {
+    //     children: [
+    //       {
+    //         children: [status],
+    //       },
+    //       progressBar,
+    //     ],
+    //   },
+    //   {
+    //     children: [retryBtn, pauseBtn, resumeBtn, clearBtn],
+    //   },
+    // ] = fileObject.element.children;
+
+    requestAnimationFrame(() => {
+
+
+      status.textContent =
+          fileObject.status === "COMPLETED"
+              ? fileObject.status
+              : `${Math.round(fileObject.percentage)}%`;
+      status.className = `status ${fileObject.status}`;
+      progressBar.style.width = fileObject.percentage + '%';
+      progressBar.style.background =
+          fileObject.status === "COMPLETED"
+              ? 'green'
+              : fileObject.status === "FAILED"
+                  ? 'red'
+                  : '#222';
+      pauseBtn.style.display =
+          fileObject.status === FILE_STATUS.UPLOADING ? 'inline-block' : 'none';
+      retryBtn.style.display = fileObject.status === "FAILED" ? 'inline-block' : 'none';
+      resumeBtn.style.display = fileObject.status === "FILE_STATUS.PAUSED" ? 'inline-block' : 'none';
+      clearBtn.style.display =
+          fileObject.status === "COMPLETED" || fileObject.status === "FILE_STATUS.PAUSED"
+              ? 'inline-block'
+              : 'none';
       updateProgressBox();
     });
   };
@@ -306,7 +418,7 @@ const uploadAndTrackFiles = (() => {
 				<p>
 					<span class="status">pending</span>
 					<span class="file-name">${file.name.slice(25)}</span>
-					<span class="file-ext">${file.name.substring(extIndex)}</span>
+					<span class="file-ext"></span>
 				</p>
 				<div class="progress-bar" style="width: 0;"></div>
 			</div>
@@ -320,7 +432,6 @@ const uploadAndTrackFiles = (() => {
     files.set(file, {
       element: fileElement,
       size: file.size,
-      status: FILE_STATUS.PENDING,
       percentage: 0,
       uploadedChunkSize: 0,
     });
@@ -351,28 +462,27 @@ const uploadAndTrackFiles = (() => {
     }
     const fileObj = files.get(file);
 
-    fileObj.status = FILE_STATUS.COMPLETED;
+    fileObj.status = "COMPLETED";
     fileObj.percentage = 100;
 
     updateFileElement(fileObj);
     clearDownloadProgress(file.name);
   };
 
-  const onProgress = (e, file) => {
-    console.log(e.loaded);
+  const onProgress = (options, file) => {
+
     const fileObj = files.get(file);
 
-    fileObj.status = FILE_STATUS.UPLOADING;
-    fileObj.percentage = e.percentage;
-    fileObj.uploadedChunkSize = e.loaded;
-
+    fileObj.status = options.total === options.loaded ? "COMPLETED" : FILE_STATUS.UPLOADING;
+    fileObj.percentage = options.percentage;
+    fileObj.uploadedChunkSize = options.loaded;
     updateFileElement(fileObj);
   };
 
   const onError = (e, file) => {
     const fileObj = files.get(file);
 
-    fileObj.status = FILE_STATUS.FAILED;
+    fileObj.status = "FAILED";
     fileObj.percentage = 100;
 
     updateFileElement(fileObj);
@@ -380,9 +490,9 @@ const uploadAndTrackFiles = (() => {
 
   const onAbort = (e, file) => {
     const fileObj = files.get(file);
-    fileObj.status = FILE_STATUS.PAUSED;
+    fileObj.status = "FILE_STATUS.PAUSED";
 
-    
+
 
     setDownloadProgress(file.name, `0|${fileObj.uploadedChunkSize}|${fileObj.size}`);
 
@@ -390,7 +500,6 @@ const uploadAndTrackFiles = (() => {
   };
 
   return (uploadedFiles) => {
-    console.log(uploadedFiles);
     [...uploadedFiles].forEach(setFileElement);
 
     document.body.appendChild(progressBox);
@@ -412,24 +521,34 @@ fileInput[0].addEventListener('click', (e) => {
     alert('파일을 첨부한 후 전송버튼을 눌러주세요.');
     return;
   }
-  
+
+  debugger
   uploadAndTrackFiles(globalFileList);
   e.currentTarget.value = '';
   globalFileList.length = 0;
 });
 
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////
+
 // 저장된 파일 리스트 반환
 document.addEventListener('DOMContentLoaded', function () {
   const $downloadList = document.getElementsByClassName('download-list-area')[0];
   fetch('http://localhost:1234/files')
-    .then((response) => response.json())
-    .then((files) => {
-      for (let i = 0; i < files.length; i++) {
-        $downloadList.appendChild(createListElement(files[i]));
-        // console.log(createListElement(files[i]));
-      }
-    })
-    .catch((error) => console.error('Error fetching files:', error));
+  .then((response) => response.json())
+  .then((files) => {
+    for (let i = 0; i < files.length; i++) {
+      $downloadList.appendChild(createListElement(files[i]));
+      // console.log(createListElement(files[i]));
+    }
+  })
+  .catch((error) => console.error('Error fetching files:', error));
 });
 
 // 받아온 리스트를 체크박스로 선택할 수 있는 li로 생성하는 함수
@@ -459,17 +578,17 @@ document.getElementsByClassName('download-btn')[0].addEventListener('click', (e)
       fileList: getCheckedFileList(),
     }),
   })
-    .then((response) => response.blob())
-    .then((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'files.zip';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    })
-    .catch((error) => console.error('Error fetching files:', error));
+  .then((response) => response.blob())
+  .then((blob) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'files.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  })
+  .catch((error) => console.error('Error fetching files:', error));
 });
 
 const getCheckedFileList = () => {
