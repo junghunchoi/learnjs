@@ -8,41 +8,34 @@
 </head>
 <body>
 
-<div>
-    <ul><li class="list-group-item d-flex justify-content-between align-items-center">
-        <div class="custom-control custom-checkbox">
-            <input type="checkbox" class="custom-control-input" id="file-2nnct7yqlimn61xrrtnj98g5-cal_button.html" name="file" value="file-2nnct7yqlimn61xrrtnj98g5-cal_button.html">
-            <label class="custom-control-label" for="file-2nnct7yqlimn61xrrtnj98g5-cal_button.html">file-2nnct7yqlimn61xrrtnj98g5-cal_button.html</label>
-        </div>
-        <span class="badge badge-primary badge-pill">file-2nnct7yqlimn61xrrtnj98g5-cal_button.html</span>
-    </li></ul>
+<div class="file-progress">
+    <div class="file-details" style="position: relative">
+        <p>
+            <span class="status">pending</span>
+            <span class="file-name">100mb</span>
+            <span class="file-ext"></span>
+        </p>
+        <div class="progress-bar" style="width: 0;"></div>
+    </div>
+    <div class="file-actions">
+        <button type="button" class="retry-btn" style="display: none">Retry</button>
+        <button type="button" class="cancel-btn" style="display: none">Pause</button>
+        <button type="button" class="resume-btn" style="display: none">Resume</button>
+        <button type="button" class="clear-btn" style="display: none">Clear</button>
+    </div>
 </div>
 
 
 
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
-  const formData = new FormData();
-  formData.append('name','junghun')
-  console.log(formData)
-  formData.append('item', 'orange');
-  formData.append('item', 'melon');
-  console.log(formData)
-  formData.set('item', 'apple'); // 기존 데이터 밀어버리고 value로 업데이트
+  const fileObj = document.getElementsByClassName("file-progress")
 
+  const [
+      {children: [{children: [,,third]}, progressBar]}, // .file-details
+      {children: [retryBtn, pauseBtn, resumeBtn, clearBtn]} // .file-actions
+  ] = fileObj[0].children;
 
-  (async () => {
-    try {
-      const formData = new FormData();
-      formData.append('name', 'zerocho');
-      formData.append('birth', 1994);
-      const result = await axios.post('https://www.zerocho.com/api/post/formdata', formData);
-      console.log(result);
-      console.log(result.data);
-    } catch (error) {
-      console.error(error);
-    }
-  })();
+  console.log(third)
 </script>
 </body>
 </html>
