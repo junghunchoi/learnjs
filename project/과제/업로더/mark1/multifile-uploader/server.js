@@ -84,9 +84,9 @@ app.post('/upload', (req, res) => {
   const fileSize = Number(match[3]);
 
 
-  if (rangeStart >= fileSize || rangeStart >= rangeEnd || rangeEnd > fileSize) {
-    return res.status(400).json({ message: 'Invalid "Content-Range" provided' });
-  }
+  // if (rangeStart >= fileSize || rangeStart >= rangeEnd || rangeEnd > fileSize) {
+  //   return res.status(400).json({ message: 'Invalid "Content-Range" provided' });
+  // }
 
   const busboy = new Busboy({ headers: req.headers });
 

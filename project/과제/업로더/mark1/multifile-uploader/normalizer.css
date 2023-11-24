@@ -30,12 +30,10 @@ main {
 }
 
 
-
 h1 {
   font-size: 2em;
   margin: 0.67em 0;
 }
-
 
 
 hr {
@@ -96,7 +94,6 @@ sup {
 }
 
 
-
 img {
   border-style: none;
 }
@@ -112,7 +109,6 @@ textarea {
   line-height: 1.15; /* 1 */
   margin: 0; /* 2 */
 }
-
 
 
 button,
@@ -135,7 +131,6 @@ button,
 }
 
 
-
 button::-moz-focus-inner,
 [type="button"]::-moz-focus-inner,
 [type="reset"]::-moz-focus-inner,
@@ -143,7 +138,6 @@ button::-moz-focus-inner,
   border-style: none;
   padding: 0;
 }
-
 
 
 button:-moz-focusring,
@@ -159,16 +153,14 @@ fieldset {
 }
 
 
-
 legend {
-  box-sizing: border-box; /* 1 */
-  color: inherit; /* 2 */
-  display: table; /* 1 */
-  max-width: 100%; /* 1 */
-  padding: 0; /* 3 */
-  white-space: normal; /* 1 */
+  box-sizing: border-box;
+  color: inherit;
+  display: table;
+  max-width: 100%;
+  padding: 0;
+  white-space: normal;
 }
-
 
 
 progress {
@@ -214,7 +206,6 @@ details {
 }
 
 
-
 summary {
   display: list-item;
 }
@@ -257,7 +248,7 @@ template {
   margin-right: auto;
 }
 
-.download-list-area{
+.download-list-area {
   width: 400px;
   border-radius: 10px;
   box-shadow: 0 5px 35px #cdcdcd;
@@ -265,7 +256,7 @@ template {
   color: #565252;
   position: relative;
   margin: 50px 0;
-  transition: background 0.3s ease;
+  transition: background 0.5s ease;
   display: flex;
   flex-direction: column;
 }
@@ -282,4 +273,14 @@ template {
   cursor: pointer;
   margin-left: auto;
   margin-right: auto;
+}
+
+.uploader-main {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.progress-area {
+  margin: 40px;
 }

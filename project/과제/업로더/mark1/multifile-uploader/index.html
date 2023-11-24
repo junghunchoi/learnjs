@@ -1,35 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>Upload Indicator</title>
-	<link rel="stylesheet" href="normalizer.css">
-	<link rel="stylesheet" href="uploader.css">
+  <meta charset="UTF-8">
+  <title>Upload Indicator</title>
+  <link rel="stylesheet" href="normalizer.css">
+  <link rel="stylesheet" href="uploader.css">
 </head>
 <body>
 
-<div style="display: flex; flex-direction: column; align-items:center">
-	<label class = "append-btn">
-		파일추가
-		<input type="file" multiple id="fileAddBtn" name="file" style="display: none"/>
-	</label>
+<div class = "uploader-main">
 
-	<div id="uploaderArea">
-		파일을 끌어다 놓으세요
-		<div id="fileUploader"></div>
-	</div>
+  <div style="display: flex; flex-direction: column; align-items:center">
+    <label class="append-btn">
+      파일추가
+      <input type="file" multiple id="fileAddBtn" name="file" style="display: none"/>
+    </label>
+
+    <div id="uploaderArea">
+      파일을 끌어다 놓으세요
+      <div id="fileUploader"></div>
+    </div>
+    <button class="upload-btn">
+      upload
+    </button>
+    <div class="download-list-area">
+      <button class="download-btn">
+        download
+      </button>
+    </div>
+  </div>
+
+
+  <div class = "progress-area">
+  </div>
+
 </div>
-	<button class="upload-btn">
-		upload
-	</button>
-<div class="download-list-area">
-	<button class="download-btn">
-		download
-	</button>
-</div>
 
-
-	<script src="uploader.js"></script>
+<script src="uploader.js"></script>
 <script src="append.js"></script>
 </body>
 </html>
+
