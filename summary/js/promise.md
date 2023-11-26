@@ -36,4 +36,3 @@ new Promise(function(resolve, reject) {
 1. 프로미스 체이닝 연산자
 2. 에러처리방법
 3. await,async
-4. 

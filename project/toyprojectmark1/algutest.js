@@ -5,7 +5,7 @@ const getHTML = async (keyword) =>{
   try {
     return axios.get("https://www.inflearn.com/courses?s=" + encodeURI(keyword));
   } catch (e){
-    console.log(err)
+    console.log(e)
   }
 
 }
