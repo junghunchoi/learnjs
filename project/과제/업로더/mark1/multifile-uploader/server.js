@@ -36,7 +36,7 @@ app.use(express.static('public'));
 // 진행상태 받아옴
 app.get('/upload-status', (req, res) => {
   console.log('/upload-status');
-  if (req.query && req.query.fileName && req.query.fileName) {
+  if (req.query && req.query.fileName) {
     getFileDetails(getFilePath(req.query.fileName))
       .then((stats) => {
         res.status(200).json({ totalChunkUploaded: stats.size });
@@ -54,14 +54,6 @@ app.post('/upload', (req, res) => {
   const fileName = req.headers['x-file-id']
 
 
-
-  // req.pipe(fs.createWriteStream( `./uploads/${(fileName)}`, { flags: 'a' }))
-  //     .on('error', (e) => {
-  //   console.error('failed upload', e);
-  //   res.sendStatus(500);
-  // });
-
-
   if (!contentRange) {
     console.log('Missing Content-Range');
     return res.status(400).json({ message: 'Missing "Content-Range" header' });
@@ -74,19 +66,7 @@ app.post('/upload', (req, res) => {
 
   const match = contentRange.match(/bytes=(\d+)-(\d+)\/(\d+)/); // ["bytes=200-999/1200", "200", "999", "1200"]
 
-  if (!match) {
-    console.log('Invalid Content-Range Format');
-    return res.status(400).json({ message: 'Invalid "Content-Range" Format' });
-  }
-
-  const rangeStart = Number(match[1]);
-  const rangeEnd = Number(match[2]);
-  const fileSize = Number(match[3]);
-
-
-  // if (rangeStart >= fileSize || rangeStart >= rangeEnd || rangeEnd > fileSize) {
-  //   return res.status(400).json({ message: 'Invalid "Content-Range" provided' });
-  // }
+  console.log(contentRange)
 
   const busboy = new Busboy({ headers: req.headers });
 
