@@ -51,6 +51,7 @@ app.get('/upload-status', (req, res) => {
 app.post('/upload', (req, res) => {
   console.log('/upload');
   const contentRange = req.headers['content-range'];
+  const contentLength = req.headers['content-length'];
   const fileName = req.headers['x-file-id']
 
 
@@ -65,8 +66,6 @@ app.post('/upload', (req, res) => {
   }
 
   const match = contentRange.match(/bytes=(\d+)-(\d+)\/(\d+)/); // ["bytes=200-999/1200", "200", "999", "1200"]
-
-  console.log(contentRange)
 
   const busboy = new Busboy({ headers: req.headers });
 
@@ -87,11 +86,12 @@ app.post('/upload', (req, res) => {
 
   busboy.on('finish', () => {
     res.sendStatus(200);
+    console.log("upload finished");
   });
 
-  req.on('close', () => {
-    console.log('request closed');
-  });
+  // req.on('close', () => {
+  //   console.log('request closed');
+  // });
 
   req.pipe(busboy);
 

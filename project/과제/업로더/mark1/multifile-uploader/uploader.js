@@ -18,37 +18,23 @@ const uploadFiles = (() => {
     onComplete() {},
   };
 
-  const uploadFileChunks = (file, options) => {
-    const chunkSize = 1024 * 1024 * 10; // 청크 크기 설정값 10MB
+  const uploadFileChunks = async (file, options) => {
+    const chunkSize = (1024 * 1024 * 1); // 청크 크기 설정값 1MB
     const currentChunkIndex = options.currentChunkIndex;
 
     setDownloadProgress(file.name, `${options.startingByte}|${options.startingByte + chunkSize}|${file.size}`);
-
-    // 현재 청크 인덱스 * 파일크기가 파일 사이즈보다
     if (currentChunkIndex * chunkSize <= file.size) {
-      const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
-      uploadChunk(chunk, currentChunkIndex, file, options)
-        // .then(() => {
-        //   if(options.startingByte + chunk.size <= file.size) {
-        //     options.startingByte += chunk.size;
-        //     options.onProgress({
-        //       ...options,
-        //       status: 'UPLOADING',
-        //       percentage: (options.startingByte * 100) / file.size,
-        //       progressElement: progressBox,
-        //       file: file,
-        //     });
-        //   }
-        // })
-        .then(() => {
-          if(options.startingByte !== file.size) {
-            options.currentChunkIndex = currentChunkIndex + 1;
-            uploadFileChunks(file, options);
-          }
-        })
-        .catch((error) => {
-          console.error('error', error);
-        });
+      // const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
+      const chunk = file.slice(options.startingByte, options.startingByte + chunkSize);
+      try {
+        await uploadChunk(chunk, currentChunkIndex, file, options);
+        if (options.startingByte !== file.size) {
+          options.currentChunkIndex = currentChunkIndex + 1;
+          await uploadFileChunks(file, options); // 재귀 호출
+        }
+      } catch (error) {
+        console.error('error', error);
+      }
     }
   };
 
@@ -67,9 +53,6 @@ const uploadFiles = (() => {
       req.setRequestHeader('X-File-Id', encodeURI(file.name));
       options.startingByte += chunk.size;
 
-      console.log(options.startingByte, chunk.size, file.size);
-      req.onload = (e) => {
-        if (req.status === 200) {
           if (options.startingByte === file.size) {
             options.onComplete({
               ...options,
@@ -78,7 +61,9 @@ const uploadFiles = (() => {
               progressElement: progressBox,
               file: file,
             });
-          }else{
+
+            clearDownloadProgress(encodeURI(file.name));
+          } else {
             options.onProgress({
               ...options,
               status: 'UPLOADING',
@@ -87,13 +72,15 @@ const uploadFiles = (() => {
               file: file,
             });
           }
-          resolve();
-        } else {
-          reject();
-          console.log('error', e);
-        }
 
-        clearDownloadProgress(encodeURI(file.name));
+      req.onload = () => {
+        if (req.status === 200) {
+          // HTTP 상태 코드가 200일 경우
+          resolve(req.response);
+        } else {
+          // 다른 HTTP 상태 코드일 경우
+          reject(new Error(`Upload failed with status: ${req.status}`));
+        }
       };
 
       req.ontimeout = (e) => options.onError(file);
@@ -126,35 +113,17 @@ const uploadFiles = (() => {
     return false;
   };
 
-  // const retryFileUpload = (file) => {
-  //   const fileReq = fileRequests.get(file);
-  //
-  //   if (fileReq) {
-  //     return fetch(`${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}&fileName=${fileReq.options.fileName}`)
-  //       .then((res) => res.json())
-  //       .then((res) => {
-  //         // if uploaded we continue
-  //         uploadFileChunks(file, {
-  //           ...fileReq.options,
-  //           startingByte: Number(res.totalChunkUploaded),
-  //         });
-  //       })
-  //       .catch(() => {
-  //         // if never uploaded we start
-  //         uploadFileChunks(file, fileReq.options);
-  //       });
-  //   }
-  // };
-
   const resumeFileUpload = (file) => {
     const fileReq = fileRequests.get(file);
 
     if (fileReq) {
       return fetch(`${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}`)
-        .then((res) => res.json())
+        .then((res) => {res.json();})
         .then((res) => {
+          console.log('res', res)
           uploadFileChunks(file, {
             ...fileReq.options,
+            startingByte: Number(res.totalChunkUploaded)
           });
         })
         .catch((e) => {
@@ -164,7 +133,7 @@ const uploadFiles = (() => {
     }
   };
 
-  const clearFileUpload = async file => {
+  const clearFileUpload = async (file) => {
     const fileReq = fileRequests.get(file);
 
     if (fileReq) {
@@ -200,9 +169,9 @@ const uploadFiles = (() => {
 
     return {
       abortFileUpload,
-      retryFileUpload,
+      // retryFileUpload,
       resumeFileUpload,
-      clearFileUpload
+      clearFileUpload,
     };
   };
 })();
@@ -220,7 +189,6 @@ const uploadAndTrackFiles = (() => {
 			`;
 
   const setFileElement = (file) => {
-    const extIndex = file.name.lastIndexOf('.');
     const fileElement = document.createElement('div');
     fileElement.className = 'file-progress';
     fileElement.innerHTML = `
@@ -243,7 +211,7 @@ const uploadAndTrackFiles = (() => {
     const [
       _,
       {
-        children: [retryBtn, pauseBtn, resumeBtn, clearBtn],
+        children: [, pauseBtn, resumeBtn, clearBtn],
       },
     ] = fileElement.children;
 
@@ -260,7 +228,6 @@ const uploadAndTrackFiles = (() => {
       files.delete(file);
       fileElement.remove();
     });
-    retryBtn.addEventListener('click', () => uploader.retryFileUpload(file));
     pauseBtn.addEventListener('click', () => uploader.abortFileUpload(file));
     resumeBtn.addEventListener('click', () => uploader.resumeFileUpload(file));
     progressBox.querySelector('.file-progress-wrapper').appendChild(fileElement);
@@ -276,19 +243,29 @@ const uploadAndTrackFiles = (() => {
       }, // .file-actions
     ] = fileObject.element.children;
 
-    requestAnimationFrame(() => {
-      const element = fileObject.element;
-      const processBar = element.getElementsByClassName('progress-bar')[0];
+    console.log(fileObject.file, fileObject.status, fileObject.percentage)
 
-      processBar.style.width = fileObject.percentage + '%';
-      processBar.style.background = 'green';
-      pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
-      resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
-      clearBtn.style.display =
+    const element = fileObject.element;
+    const processBar = element.getElementsByClassName('progress-bar')[0];
+
+    processBar.style.width = fileObject.percentage + '%';
+    processBar.style.background = 'green';
+    pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
+    resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
+    clearBtn.style.display =
         fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
 
-      // updateProgressBox();
-    });
+    // requestAnimationFrame(() => {
+    //   const element = fileObject.element;
+    //   const processBar = element.getElementsByClassName('progress-bar')[0];
+    //
+    //   processBar.style.width = fileObject.percentage + '%';
+    //   processBar.style.background = 'green';
+    //   pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
+    //   resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
+    //   clearBtn.style.display =
+    //     fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
+    // });
   };
 
   const onComplete = (file) => {
@@ -310,7 +287,7 @@ const uploadAndTrackFiles = (() => {
   };
 
   const onError = (file) => {
-    const fileObj = files.get(file);
+    const fileObj = files.get(file.file);
 
     fileObj.status = 'FAILED';
     fileObj.percentage = 100;
@@ -323,6 +300,26 @@ const uploadAndTrackFiles = (() => {
     fileObj.status = 'PAUSED';
 
     updateFileElement(fileObj);
+  };
+
+  const checkProgressedFiles = () => {
+    const progressedFiles = [];
+    const localStorageList = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i).slice(25);
+      const value = localStorage.getItem(key);
+      localStorageList.push({ key, value });
+    }
+
+    for (let i = 0; i < globalFileList.length; i++) {
+      for (const localStorageListKey in localStorageList) {
+        if (globalFileList[i].name.slice(25) === localStorageList[localStorageListKey].key) {
+          globalFileList[i].startingByte = localStorageList[localStorageListKey].value.split('|')[0];
+          return;
+        }
+      }
+    }
   };
 
   return (globalFileList) => {
