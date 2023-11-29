@@ -35,11 +35,11 @@ app.use(express.static('public'));
 
 // 진행상태 받아옴
 app.get('/upload-status', (req, res) => {
-  console.log('/upload-status');
   if (req.query && req.query.fileName) {
     getFileDetails(getFilePath(req.query.fileName))
       .then((stats) => {
-        res.status(200).json({ totalChunkUploaded: stats.size });
+        res.json({ totalChunkUploaded: stats.size });
+        console.log(stats.size);
       })
       .catch((err) => {
         console.error('failed to read file', err);
@@ -49,7 +49,6 @@ app.get('/upload-status', (req, res) => {
 });
 
 app.post('/upload', (req, res) => {
-  console.log('/upload');
   const contentRange = req.headers['content-range'];
   const contentLength = req.headers['content-length'];
   const fileName = req.headers['x-file-id']
@@ -86,12 +85,8 @@ app.post('/upload', (req, res) => {
 
   busboy.on('finish', () => {
     res.sendStatus(200);
-    console.log("upload finished");
   });
 
-  // req.on('close', () => {
-  //   console.log('request closed');
-  // });
 
   req.pipe(busboy);
 

@@ -19,10 +19,13 @@ const uploadFiles = (() => {
   };
 
   const uploadFileChunks = async (file, options) => {
-    const chunkSize = (1024 * 1024 * 1); // 청크 크기 설정값 1MB
+    const chunkSize = 1024 * 1024 * 1; // 청크 크기 설정값 1MB
     const currentChunkIndex = options.currentChunkIndex;
 
-    setDownloadProgress(file.name, `${options.startingByte}|${options.startingByte + chunkSize}|${file.size}`);
+    setDownloadProgress(
+      file.name,
+      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}`,
+    );
     if (currentChunkIndex * chunkSize <= file.size) {
       // const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
       const chunk = file.slice(options.startingByte, options.startingByte + chunkSize);
@@ -53,25 +56,25 @@ const uploadFiles = (() => {
       req.setRequestHeader('X-File-Id', encodeURI(file.name));
       options.startingByte += chunk.size;
 
-          if (options.startingByte === file.size) {
-            options.onComplete({
-              ...options,
-              status: 'COMPLETE',
-              percentage: (options.startingByte * 100) / file.size,
-              progressElement: progressBox,
-              file: file,
-            });
+      if (options.startingByte === file.size) {
+        options.onComplete({
+          ...options,
+          status: 'COMPLETE',
+          percentage: (options.startingByte * 100) / file.size,
+          progressElement: progressBox,
+          file: file,
+        });
 
-            clearDownloadProgress(encodeURI(file.name));
-          } else {
-            options.onProgress({
-              ...options,
-              status: 'UPLOADING',
-              percentage: (options.startingByte * 100) / file.size,
-              progressElement: progressBox,
-              file: file,
-            });
-          }
+        clearDownloadProgress(encodeURI(file.name));
+      } else {
+        options.onProgress({
+          ...options,
+          status: 'UPLOADING',
+          percentage: (options.startingByte * 100) / file.size,
+          progressElement: progressBox,
+          file: file,
+        });
+      }
 
       req.onload = () => {
         if (req.status === 200) {
@@ -118,12 +121,11 @@ const uploadFiles = (() => {
 
     if (fileReq) {
       return fetch(`${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}`)
-        .then((res) => {res.json();})
+        .then((res) => res.json())
         .then((res) => {
-          console.log('res', res)
           uploadFileChunks(file, {
             ...fileReq.options,
-            startingByte: Number(res.totalChunkUploaded)
+            startingByte: Number(res.totalChunkUploaded),
           });
         })
         .catch((e) => {
@@ -147,7 +149,6 @@ const uploadFiles = (() => {
   };
 
   // 업로드 현황 업데이터
-  const files = new Map();
   const progressBox = document.createElement('div');
 
   progressBox.className = 'upload-progress-tracker expanded';
@@ -165,7 +166,9 @@ const uploadFiles = (() => {
 			`;
 
   return (files, options = defaultOptions) => {
-    [...files].forEach((file) => uploadFile(file, { ...defaultOptions, ...options }));
+    [...files].forEach((file) => {
+      uploadFile(file, { ...defaultOptions, ...options });
+    });
 
     return {
       abortFileUpload,
@@ -243,8 +246,6 @@ const uploadAndTrackFiles = (() => {
       }, // .file-actions
     ] = fileObject.element.children;
 
-    console.log(fileObject.file, fileObject.status, fileObject.percentage)
-
     const element = fileObject.element;
     const processBar = element.getElementsByClassName('progress-bar')[0];
 
@@ -253,19 +254,7 @@ const uploadAndTrackFiles = (() => {
     pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
     resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
     clearBtn.style.display =
-        fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
-
-    // requestAnimationFrame(() => {
-    //   const element = fileObject.element;
-    //   const processBar = element.getElementsByClassName('progress-bar')[0];
-    //
-    //   processBar.style.width = fileObject.percentage + '%';
-    //   processBar.style.background = 'green';
-    //   pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
-    //   resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
-    //   clearBtn.style.display =
-    //     fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
-    // });
+      fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
   };
 
   const onComplete = (file) => {
@@ -302,26 +291,6 @@ const uploadAndTrackFiles = (() => {
     updateFileElement(fileObj);
   };
 
-  const checkProgressedFiles = () => {
-    const progressedFiles = [];
-    const localStorageList = [];
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i).slice(25);
-      const value = localStorage.getItem(key);
-      localStorageList.push({ key, value });
-    }
-
-    for (let i = 0; i < globalFileList.length; i++) {
-      for (const localStorageListKey in localStorageList) {
-        if (globalFileList[i].name.slice(25) === localStorageList[localStorageListKey].key) {
-          globalFileList[i].startingByte = localStorageList[localStorageListKey].value.split('|')[0];
-          return;
-        }
-      }
-    }
-  };
-
   return (globalFileList) => {
     for (let i = 0; i < globalFileList.length; i++) {
       globalFileList[i].element = setFileElement(globalFileList[i]);
@@ -346,6 +315,48 @@ fileInput[0].addEventListener('click', (e) => {
     return;
   }
 
+  const checkSavedServerFiles = (fileName) => {
+    return fetch(`http://localhost:1234/upload-status?fileName=${fileName}`)
+    .then((res) => res.json())
+    .catch((e) => {
+      console.log('error', e);
+    });
+  }
+
+  const checkProgressedFiles = () => {
+    const localStorageList = [];
+    let progressedFileString = '';
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i).slice(25);
+      const value = localStorage.getItem(localStorage.key(i));
+      localStorageList.push({ key, value });
+    }
+
+    debugger;
+    for (let i = 0; i < globalFileList.length; i++) {
+      for (let j = 0; j < localStorageList.length; j++) {
+        if (globalFileList[i].name.slice(25) === localStorageList[j].key) {
+          const newFileName = localStorage.key(j);
+          const newFile = new File([globalFileList[i]], newFileName, {
+            type: globalFileList[i].type,
+          });
+
+          globalFileList[i] = newFile;
+          globalFileList[i].startingByte = Number(localStorageList[j].value.split('|')[0]);
+
+          progressedFileString += globalFileList[i].name.slice(25) + ' ';
+          break;
+        }
+      }
+    }
+
+    // 팝업을 띄워준다.
+    if (progressedFileString.length !== 0) {
+      alert(`${progressedFileString} 파일은 이전에 업로드가 진행되었던 파일입니다. 이어서 업로드를 진행합니다.`);
+    }
+  };
+  checkProgressedFiles();
   uploadAndTrackFiles(globalFileList);
   e.currentTarget.value = '';
   globalFileList.length = 0;
