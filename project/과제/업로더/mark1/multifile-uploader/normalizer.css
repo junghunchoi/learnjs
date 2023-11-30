@@ -223,7 +223,8 @@ template {
   background: white;
   border: 2px solid black;
   border-radius: 10px;
-  margin-bottom: 50px;
+  margin-bottom: 5px;
+  width: 500px;
   padding: 20px;
   text-align: center;
 }
@@ -236,16 +237,14 @@ template {
 
 .append-btn {
   background: #607D8B;
-  border-radius: 2px;
-  color: white;
-  padding: 10px 15px;
+  color: #fff;
+  border-radius: 5px;
+  padding: 15px 20px;
   text-transform: uppercase;
-  /*letter-spacing: 1px;*/
+  letter-spacing: 1px;
   font-weight: bold;
-  font-size: 10px;
+  font-size: 14px;
   cursor: pointer;
-  margin-bottom: 5px;
-  margin-right: auto;
 }
 
 .download-list-area {

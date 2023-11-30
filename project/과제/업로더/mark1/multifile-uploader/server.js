@@ -6,10 +6,8 @@ const Busboy = require('busboy');
 const path = require('path');
 const archiver = require('archiver');
 
-
 const app = express();
 const getFileDetails = promisify(fs.stat);
-
 
 const getFilePath = (fileName) => `./uploads/${fileName}`;
 
@@ -38,7 +36,7 @@ app.get('/upload-status', (req, res) => {
   if (req.query && req.query.fileName) {
     getFileDetails(getFilePath(req.query.fileName))
       .then((stats) => {
-        res.json({ totalChunkUploaded: stats.size });
+        res.status(200).json({ totalChunkUploaded: stats.size });
         console.log(stats.size);
       })
       .catch((err) => {
@@ -50,9 +48,7 @@ app.get('/upload-status', (req, res) => {
 
 app.post('/upload', (req, res) => {
   const contentRange = req.headers['content-range'];
-  const contentLength = req.headers['content-length'];
-  const fileName = req.headers['x-file-id']
-
+  const fileName = req.headers['x-file-id'];
 
   if (!contentRange) {
     console.log('Missing Content-Range');
@@ -69,14 +65,11 @@ app.post('/upload', (req, res) => {
   const busboy = new Busboy({ headers: req.headers });
 
   busboy.on('file', (_, file) => {
-    file
-    .pipe(fs.createWriteStream(`./uploads/${decodeURIComponent(fileName)}`, {flags: 'a'}))
-    .on('error', (e) => {
+    file.pipe(fs.createWriteStream(`./uploads/${decodeURIComponent(fileName)}`, { flags: 'a' })).on('error', (e) => {
       console.error('failed upload', e);
       res.sendStatus(500);
     });
   });
-
 
   busboy.on('error', (e) => {
     console.error('failed upload', e);
@@ -87,9 +80,7 @@ app.post('/upload', (req, res) => {
     res.sendStatus(200);
   });
 
-
   req.pipe(busboy);
-
 });
 
 app.get('/files', (req, res) => {

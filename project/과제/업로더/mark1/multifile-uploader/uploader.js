@@ -24,7 +24,7 @@ const uploadFiles = (() => {
 
     setDownloadProgress(
       file.name,
-      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}`,
+      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}|${file.lastModified}`,
     );
     if (currentChunkIndex * chunkSize <= file.size) {
       // const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
@@ -64,7 +64,6 @@ const uploadFiles = (() => {
           progressElement: progressBox,
           file: file,
         });
-
         clearDownloadProgress(encodeURI(file.name));
       } else {
         options.onProgress({
@@ -141,7 +140,7 @@ const uploadFiles = (() => {
     if (fileReq) {
       await abortFileUpload(file);
       fileRequests.delete(file);
-
+      clearDownloadProgress(encodeURI(file.name));
       return true;
     }
 
@@ -315,15 +314,22 @@ fileInput[0].addEventListener('click', (e) => {
     return;
   }
 
-  const checkSavedServerFiles = (fileName) => {
-    return fetch(`http://localhost:1234/upload-status?fileName=${fileName}`)
-    .then((res) => res.json())
-    .catch((e) => {
-      console.log('error', e);
-    });
+  async function checkSavedServerFiles(fileName) {
+    let saveFileSize = 0;
+    const url = `http://localhost:1234/upload-status?fileName=${fileName}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      saveFileSize = data.totalChunkUploaded;
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+    return saveFileSize;
   }
 
-  const checkProgressedFiles = () => {
+  async function checkProgressedFiles() {
     const localStorageList = [];
     let progressedFileString = '';
 
@@ -333,33 +339,42 @@ fileInput[0].addEventListener('click', (e) => {
       localStorageList.push({ key, value });
     }
 
-    debugger;
+
     for (let i = 0; i < globalFileList.length; i++) {
       for (let j = 0; j < localStorageList.length; j++) {
-        if (globalFileList[i].name.slice(25) === localStorageList[j].key) {
+        debugger
+        if (
+          globalFileList[i].name.slice(25) === localStorageList[j].key &&
+          // Number(globalFileList[i].lastModified) === Number(localStorageList[j].value.split('|')[3]) &&
+            globalFileList[i].size === Number(localStorageList[j].value.split('|')[2])
+        ) {
           const newFileName = localStorage.key(j);
           const newFile = new File([globalFileList[i]], newFileName, {
             type: globalFileList[i].type,
           });
 
           globalFileList[i] = newFile;
-          globalFileList[i].startingByte = Number(localStorageList[j].value.split('|')[0]);
+          globalFileList[i].startingByte = await checkSavedServerFiles(newFileName);
 
           progressedFileString += globalFileList[i].name.slice(25) + ' ';
           break;
         }
       }
     }
-
-    // 팝업을 띄워준다.
     if (progressedFileString.length !== 0) {
       alert(`${progressedFileString} 파일은 이전에 업로드가 진행되었던 파일입니다. 이어서 업로드를 진행합니다.`);
     }
-  };
-  checkProgressedFiles();
-  uploadAndTrackFiles(globalFileList);
-  e.currentTarget.value = '';
-  globalFileList.length = 0;
+  }
+
+  checkProgressedFiles()
+    .then(() => {
+      uploadAndTrackFiles(globalFileList);
+      e.currentTarget.value = '';
+      globalFileList.length = 0;
+    })
+    .catch((e) => {
+      console.log('error', e);
+    });
 });
 
 /////////////////////////////////////////////////////////////////
@@ -429,10 +444,6 @@ function setDownloadProgress(fileName, bytesDownloaded) {
   localStorage.setItem(fileName, bytesDownloaded.toString());
 }
 
-function getDownloadProgress(fileName) {
-  return parseInt(localStorage.getItem(fileName)) || 0;
-}
-
 function clearDownloadProgress(fileName) {
-  localStorage.removeItem(fileName);
+  localStorage.removeItem(decodeURIComponent(fileName));
 }

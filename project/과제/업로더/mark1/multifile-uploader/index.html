@@ -8,20 +8,24 @@
 </head>
 <body>
 
-<div class = "uploader-main">
+<div class="uploader-main">
 
   <div style="display: flex; flex-direction: column; align-items:center">
+    <div>
       <div id="uploaderArea">
-      파일을 끌어다 놓으세요
-      <div id="fileUploader"></div>
+        파일을 끌어다 놓으세요
+        <div id="fileUploader"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <label class="append-btn">
+          파일추가
+          <input type="file" multiple id="fileAddBtn" name="file" style="display: none"/>
+        </label>
+        <button class="upload-btn">
+          upload
+        </button>
+      </div>
     </div>
-      <label class="append-btn">
-        파일추가
-        <input type="file" multiple id="fileAddBtn" name="file" style="display: none"/>
-      </label>
-    <button class="upload-btn">
-      upload
-    </button>
     <div class="download-list-area">
       <button class="download-btn">
         download
@@ -30,7 +34,7 @@
   </div>
 
 
-  <div class = "progress-area">
+  <div class="progress-area">
   </div>
 
 </div>
