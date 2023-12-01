@@ -3,9 +3,9 @@ const globalFileList = [];
 const uploadFiles = (() => {
   const fileRequests = new WeakMap();
   const ENDPOINTS = {
-    UPLOAD: 'http://localhost:1234/upload',
-    UPLOAD_STATUS: 'http://localhost:1234/upload-status',
-    UPLOAD_REQUEST: 'http://localhost:1234/upload-request',
+    UPLOAD: 'http://10.10.0.157:1234/upload',
+    UPLOAD_STATUS: 'http://10.10.0.157:1234/upload-status',
+    UPLOAD_REQUEST: 'http://10.10.0.157:1234/upload-request',
   };
   const defaultOptions = {
     url: ENDPOINTS.UPLOAD,
@@ -24,16 +24,15 @@ const uploadFiles = (() => {
 
     setDownloadProgress(
       file.name,
-      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}|${file.lastModified}`,
+      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}|${file.originLastModified}`,
     );
     if (currentChunkIndex * chunkSize <= file.size) {
-      // const chunk = file.slice(currentChunkIndex * chunkSize, (currentChunkIndex + 1) * chunkSize);
       const chunk = file.slice(options.startingByte, options.startingByte + chunkSize);
       try {
         await uploadChunk(chunk, currentChunkIndex, file, options);
         if (options.startingByte !== file.size) {
           options.currentChunkIndex = currentChunkIndex + 1;
-          await uploadFileChunks(file, options); // 재귀 호출
+          await uploadFileChunks(file, options);
         }
       } catch (error) {
         console.error('error', error);
@@ -65,6 +64,8 @@ const uploadFiles = (() => {
           file: file,
         });
         clearDownloadProgress(encodeURI(file.name));
+        createUploadedFileList();
+        removeFileList(file);
       } else {
         options.onProgress({
           ...options,
@@ -98,7 +99,7 @@ const uploadFiles = (() => {
   }
 
   const uploadFile = (file, options) => {
-    options = { ...options, ...file }; // res = {fileName: "test.txt"}
+    options = { ...options, ...file };
     fileRequests.set(file, { request: null, options });
 
     uploadFileChunks(file, options);
@@ -141,11 +142,21 @@ const uploadFiles = (() => {
       await abortFileUpload(file);
       fileRequests.delete(file);
       clearDownloadProgress(encodeURI(file.name));
+      removeFileList(file);
       return true;
     }
 
     return false;
   };
+
+  const removeFileList = (file) => {
+    const $fileUploader = document.getElementById('fileUploader');
+    const childComponent = document.getElementById(file.name.slice(25));
+
+    if ($fileUploader && childComponent) {
+      $fileUploader.removeChild(childComponent);
+    }
+  }
 
   // 업로드 현황 업데이터
   const progressBox = document.createElement('div');
@@ -153,13 +164,6 @@ const uploadFiles = (() => {
   progressBox.className = 'upload-progress-tracker expanded';
   progressBox.textContent = 'Uploading...';
   progressBox.innerHTML = `
-				<h3>Uploading 0 Files</h3>
-				<p class="upload-progress">
-					<span class="uploads-percentage">0%</span>
-					<span class="success-count">0</span>
-					<span class="failed-count">0</span>
-					<span class="paused-count">0</span>
-				</p>
 				<div class="uploads-progress-bar" style="width: 0;"></div>
 				<div class="file-progress-wrapper" style="width: 100%"></div>
 			`;
@@ -242,7 +246,7 @@ const uploadAndTrackFiles = (() => {
       ,
       {
         children: [, pauseBtn, resumeBtn, clearBtn],
-      }, // .file-actions
+      },
     ] = fileObject.element.children;
 
     const element = fileObject.element;
@@ -316,7 +320,7 @@ fileInput[0].addEventListener('click', (e) => {
 
   async function checkSavedServerFiles(fileName) {
     let saveFileSize = 0;
-    const url = `http://localhost:1234/upload-status?fileName=${fileName}`;
+    const url = `http://10.10.0.157:1234/upload-status?fileName=${fileName}`;
 
     try {
       const response = await fetch(url);
@@ -342,10 +346,9 @@ fileInput[0].addEventListener('click', (e) => {
 
     for (let i = 0; i < globalFileList.length; i++) {
       for (let j = 0; j < localStorageList.length; j++) {
-        debugger
         if (
           globalFileList[i].name.slice(25) === localStorageList[j].key &&
-          // Number(globalFileList[i].lastModified) === Number(localStorageList[j].value.split('|')[3]) &&
+          Number(globalFileList[i].originLastModified) === Number(localStorageList[j].value.split('|')[3]) &&
             globalFileList[i].size === Number(localStorageList[j].value.split('|')[2])
         ) {
           const newFileName = localStorage.key(j);
@@ -361,6 +364,7 @@ fileInput[0].addEventListener('click', (e) => {
         }
       }
     }
+
     if (progressedFileString.length !== 0) {
       alert(`${progressedFileString} 파일은 이전에 업로드가 진행되었던 파일입니다. 이어서 업로드를 진행합니다.`);
     }
@@ -369,7 +373,6 @@ fileInput[0].addEventListener('click', (e) => {
   checkProgressedFiles()
     .then(() => {
       uploadAndTrackFiles(globalFileList);
-      e.currentTarget.value = '';
       globalFileList.length = 0;
     })
     .catch((e) => {
@@ -377,22 +380,26 @@ fileInput[0].addEventListener('click', (e) => {
     });
 });
 
-/////////////////////////////////////////////////////////////////
 
 // 저장된 파일 리스트 반환
 document.addEventListener('DOMContentLoaded', function () {
-  const $downloadList = document.getElementsByClassName('download-list-area')[0];
-  fetch('http://localhost:1234/files')
-    .then((response) => response.json())
-    .then((files) => {
-      for (let i = 0; i < files.length; i++) {
-        $downloadList.appendChild(createListElement(files[i]));
-      }
-    })
-    .catch((error) => console.error('Error fetching files:', error));
+  createUploadedFileList();
 });
 
-// 받아온 리스트를 체크박스로 선택할 수 있는 li로 생성하는 함수
+function createUploadedFileList() {
+  const $downloadList = document.getElementsByClassName('download-list-area')[0];
+  $downloadList.innerHTML = '';
+
+  fetch('http://10.10.0.157:1234/files')
+  .then((response) => response.json())
+  .then((files) => {
+    for (let i = 0; i < files.length; i++) {
+      $downloadList.appendChild(createListElement(files[i]));
+    }
+  })
+  .catch((error) => console.error('Error fetching files:', error));
+}
+
 function createListElement(file) {
   const ul = document.createElement('ul');
   const li = document.createElement('li');
@@ -410,7 +417,7 @@ function createListElement(file) {
 }
 
 document.getElementsByClassName('download-btn')[0].addEventListener('click', (e) => {
-  return fetch('http://localhost:1234/download', {
+  return fetch('http://10.10.0.157:1234/download', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -24,8 +24,13 @@ dropbox.addEventListener('drop', function (e) {
 
   for (var i = 0; i < fileList.length; i++) {
     input_filename.appendChild(makeFileList(fileList[i]))
-    globalFileList.push(fileList[i])
+    const newFileName = uniqueAlphaNumericId() + '-' + fileList[i].name;
+
+    globalFileList.push(new File([fileList[i]], newFileName, { type: fileList[i].type}))
+    globalFileList[i].originLastModified = fileList[i].lastModified
   }
+
+
   document.getElementById("uploaderArea").childNodes[0].data = "";
 });
 
@@ -69,11 +74,14 @@ $fileAddBtn.addEventListener("change", function (e) {
   for (var i = 0; i < fileList.length; i++) {
     input_filename.appendChild(makeFileList(fileList[i]))
     const newFileName = uniqueAlphaNumericId() + '-' + fileList[i].name;
-    globalFileList.push(new File([fileList[i]], newFileName, { type: fileList[i].type }));
-  }
 
+    globalFileList.push(new File([fileList[i]], newFileName, { type: fileList[i].type}))
+    globalFileList[i].originLastModified = fileList[i].lastModified
+  }
   document.getElementById("uploaderArea").childNodes[0].data = "";
 })
+
+
 
 const uniqueAlphaNumericId = (() => {
   const heyStack = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -83,3 +91,4 @@ const uniqueAlphaNumericId = (() => {
   return (length = 24) => Array.from({length},
       () => heyStack[randomInt()]).join("");
 })();
+

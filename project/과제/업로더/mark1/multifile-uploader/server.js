@@ -15,22 +15,6 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// app.post("/upload-request", (req, res) => {
-//
-//   console.log("/upload-request");
-//   if (!req.body || !req.body.fileName) {
-//     res.status(400).json({message: 'Missing "fileName"'});
-//   } else {
-//     // const fileName = uniqueAlphaNumericId();
-//     const fileName = req.body.fileName;
-//     fs.createWriteStream(getFilePath(req.body.fileName),
-//         {flags: "w"});
-//     res.status(200).json({fileName});
-//   }
-//
-//
-// });
-
 // 진행상태 받아옴
 app.get('/upload-status', (req, res) => {
   if (req.query && req.query.fileName) {
