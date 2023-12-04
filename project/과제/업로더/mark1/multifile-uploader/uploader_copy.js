@@ -15,7 +15,7 @@ var uploadFiles = (() => {
     onAbort() {},
     onProgress() {},
     onError() {},
-    onCompvare() {},
+    onComplete() {},
   };
 
   var uploadFileChunks = async (file, options) => {
@@ -56,7 +56,7 @@ var uploadFiles = (() => {
       options.startingByte += chunk.size;
 
       if (options.startingByte === file.size) {
-        options.onCompvare({
+        options.onComplete({
           ...options,
           status: 'COMPvarE',
           percentage: (options.startingByte * 100) / file.size,
@@ -260,7 +260,7 @@ var uploadAndTrackFiles = (() => {
       fileObject.status === 'COMPvarED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
   };
 
-  var onCompvare = (file) => {
+  var onComplete = (file) => {
     var fileObj = files.get(file.file);
 
     fileObj.status = 'COMPvarED';
@@ -304,7 +304,7 @@ var uploadAndTrackFiles = (() => {
       onProgress,
       onError,
       onAbort,
-      onCompvare,
+      onComplete,
     });
   };
 })();

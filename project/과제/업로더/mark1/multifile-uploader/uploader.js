@@ -1,165 +1,222 @@
-const globalFileList = [];
+var globalFileList = [];
 
-const uploadFiles = (() => {
-  const fileRequests = new WeakMap();
-  const ENDPOINTS = {
+var uploadFiles = (function() {
+  var fileRequests = new WeakMap();
+  var ENDPOINTS = {
     UPLOAD: 'http://10.10.0.157:1234/upload',
     UPLOAD_STATUS: 'http://10.10.0.157:1234/upload-status',
     UPLOAD_REQUEST: 'http://10.10.0.157:1234/upload-request',
   };
-  const defaultOptions = {
+  var defaultOptions = {
     url: ENDPOINTS.UPLOAD,
     startingByte: 0,
     fileName: '',
     currentChunkIndex: 0,
-    onAbort() {},
-    onProgress() {},
-    onError() {},
-    onComplete() {},
+    onAbort: function() {},
+    onProgress: function() {},
+    onError: function() {},
+    onComplete: function() {},
   };
 
-  const uploadFileChunks = async (file, options) => {
-    const chunkSize = 1024 * 1024 * 1; // 청크 크기 설정값 1MB
-    const currentChunkIndex = options.currentChunkIndex;
+  var uploadFileChunks = function(file, options) {
+    var chunkSize = 1024 * 1024 * 1; // 청크 크기 설정값 1MB
+    var currentChunkIndex = options.currentChunkIndex;
 
     setDownloadProgress(
-      file.name,
-      `${options.startingByte}|${Number(options.startingByte) + Number(chunkSize)}|${file.size}|${file.originLastModified}`,
+        file.name,
+        options.startingByte + '|' + (options.startingByte + chunkSize) + '|' + file.size + '|' + file.originLastModified
     );
+
     if (currentChunkIndex * chunkSize <= file.size) {
-      const chunk = file.slice(options.startingByte, options.startingByte + chunkSize);
-      try {
-        await uploadChunk(chunk, currentChunkIndex, file, options);
-        if (options.startingByte !== file.size) {
-          options.currentChunkIndex = currentChunkIndex + 1;
-          await uploadFileChunks(file, options);
+      var chunk = file.slice(options.startingByte, options.startingByte + chunkSize);
+      uploadChunk(chunk, currentChunkIndex, file, options, function(err) {
+        if (err) {
+          console.error('error', err);
+        } else {
+          if (options.startingByte !== file.size) {
+            options.currentChunkIndex = currentChunkIndex + 1;
+            uploadFileChunks(file, options);
+          }
         }
-      } catch (error) {
-        console.error('error', error);
-      }
+      });
     }
   };
 
-  async function uploadChunk(chunk, chunkIndex, file, options) {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('fileChunk', chunk);
-      formData.append('fileName', file.name);
+  function uploadChunk(chunk, chunkIndex, file, options, callback) {
+    var formData = new FormData();
+    formData.append('fileChunk', chunk);
+    formData.append('fileName', file.name);
 
-      const req = new XMLHttpRequest();
-      req.open('POST', options.url, true);
-      req.setRequestHeader(
+    var req = new XMLHttpRequest();
+    req.open('POST', options.url, true);
+    req.setRequestHeader(
         'Content-Range',
-        `bytes=${options.startingByte}-${options.startingByte + chunk.size}/${file.size}`,
-      );
-      req.setRequestHeader('X-File-Id', encodeURI(file.name));
-      options.startingByte += chunk.size;
+        'bytes=' + options.startingByte + '-' + (options.startingByte + chunk.size) + '/' + file.size
+    );
+    req.setRequestHeader('X-File-Id', encodeURI(file.name));
+    options.startingByte += chunk.size;
 
-      if (options.startingByte === file.size) {
-        options.onComplete({
-          ...options,
-          status: 'COMPLETE',
-          percentage: (options.startingByte * 100) / file.size,
-          progressElement: progressBox,
-          file: file,
-        });
-        clearDownloadProgress(encodeURI(file.name));
-        createUploadedFileList();
-        removeFileList(file);
-      } else {
-        options.onProgress({
-          ...options,
-          status: 'UPLOADING',
-          percentage: (options.startingByte * 100) / file.size,
-          progressElement: progressBox,
-          file: file,
-        });
-      }
-
-      req.onload = () => {
-        if (req.status === 200) {
-          // HTTP 상태 코드가 200일 경우
-          resolve(req.response);
+    req.onload = function() {
+      if (req.status === 200) {
+        // HTTP 상태 코드가 200일 경우
+        if (options.startingByte === file.size) {
+          options.onComplete({
+            url: options.url,
+            startingByte: options.startingByte,
+            fileName: options.fileName,
+            currentChunkIndex: options.currentChunkIndex,
+            onAbort: options.onAbort,
+            onProgress: options.onProgress,
+            onError: options.onError,
+            onComplete: options.onComplete,
+            status: 'COMPLETE',
+            percentage: (options.startingByte * 100) / file.size,
+            progressElement: options.progressElement,
+            file: file
+          });
+          clearDownloadProgress(encodeURI(file.name));
+          createUploadedFileList();
+          removeFileList(file);
         } else {
-          // 다른 HTTP 상태 코드일 경우
-          reject(new Error(`Upload failed with status: ${req.status}`));
+          options.onProgress({
+            // 여기서 스프레드 연산자(...) 대신 객체의 속성을 직접 복사합니다.
+            url: options.url,
+            startingByte: options.startingByte,
+            fileName: options.fileName,
+            currentChunkIndex: options.currentChunkIndex,
+            onAbort: options.onAbort,
+            onProgress: options.onProgress,
+            onError: options.onError,
+            onComplete: options.onComplete,
+            status: 'UPLOADING',
+            percentage: (options.startingByte * 100) / file.size,
+            progressElement: options.progressElement,
+            file: file
+          });
         }
-      };
+        callback(null);
+      } else {
+        // 다른 HTTP 상태 코드일 경우
+        callback(new Error('Upload failed with status: ' + req.status));
+      }
+    };
 
-      req.ontimeout = (e) => options.onError(file);
+    req.ontimeout = function() { options.onError(file); };
+    req.onabort = function() { options.onAbort(file); };
+    req.onerror = function() { options.onError(file); };
 
-      req.onabort = (e) => options.onAbort(file);
+    fileRequests.get(file).request = req;
 
-      req.onerror = (e) => options.onError(file);
-
-      fileRequests.get(file).request = req;
-
-      req.send(formData);
-    });
+    req.send(formData);
   }
 
-  const uploadFile = (file, options) => {
-    options = { ...options, ...file };
-    fileRequests.set(file, { request: null, options });
+  var uploadFile = function(file, options) {
+    // 스프레드 연산자 대신 수동으로 객체 속성 복사
+    var extendedOptions = {
+      url: options.url || defaultOptions.url,
+      startingByte: options.startingByte || defaultOptions.startingByte,
+      fileName: options.fileName || defaultOptions.fileName,
+      currentChunkIndex: options.currentChunkIndex
+          || defaultOptions.currentChunkIndex,
+      onAbort: options.onAbort || defaultOptions.onAbort,
+      onProgress: options.onProgress || defaultOptions.onProgress,
+      onError: options.onError || defaultOptions.onError,
+      onComplete: options.onComplete || defaultOptions.onComplete
+    };
 
-    uploadFileChunks(file, options);
-  };
+    fileRequests.set(file, {request: null, options: extendedOptions});
+    uploadFileChunks(file, extendedOptions);
+  }
 
-  const abortFileUpload = async (file) => {
-    const fileReq = fileRequests.get(file);
+    var abortFileUpload = function(file){
+      var fileReq = fileRequests.get(file);
 
-    if (fileReq && fileReq.request) {
-      fileReq.request.abort();
-      return true;
-    }
+      if (fileReq && fileReq.request) {
+        fileReq.request.abort();
+        return true;
+      }
 
-    return false;
-  };
+      return false;
+    };
 
-  const resumeFileUpload = (file) => {
-    const fileReq = fileRequests.get(file);
+    var resumeFileUpload = function(file) {
+      var fileReq = fileRequests.get(file);
 
-    if (fileReq) {
-      return fetch(`${ENDPOINTS.UPLOAD_STATUS}?fileName=${file.name}`)
-        .then((res) => res.json())
-        .then((res) => {
-          uploadFileChunks(file, {
-            ...fileReq.options,
-            startingByte: Number(res.totalChunkUploaded),
-          });
-        })
-        .catch((e) => {
-          console.log('error', e);
-          fileReq.options.onError({ ...e, file });
+      if (fileReq) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', ENDPOINTS.UPLOAD_STATUS + '?fileName=' + encodeURIComponent(file.name), true);
+
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            var res = JSON.parse(xhr.responseText);
+            var updatedOptions = {
+              url: fileReq.options.url,
+              startingByte: Number(res.totalChunkUploaded),
+              fileName: fileReq.options.fileName,
+              currentChunkIndex: fileReq.options.currentChunkIndex,
+              onAbort: fileReq.options.onAbort,
+              onProgress: fileReq.options.onProgress,
+              onError: fileReq.options.onError,
+              onComplete: fileReq.options.onComplete
+            };
+            uploadFileChunks(file, updatedOptions);
+          } else {
+            console.log('error', xhr.statusText);
+            fileReq.options.onError({ error: xhr.statusText, file: file });
+          }
+        };
+
+        xhr.onerror = function() {
+          console.log('Network error');
+          fileReq.options.onError({ error: 'Network error', file: file });
+        };
+
+        xhr.send();
+      }
+    };
+
+    var clearFileUpload = function(file, callback) {
+      var fileReq = fileRequests.get(file);
+
+      if (fileReq) {
+        abortFileUpload(file, function(success) {
+          if (success) {
+            fileRequests.delete(file);
+            clearDownloadProgress(encodeURI(file.name));
+            removeFileList(file);
+            callback(true);
+          } else {
+            callback(false);
+          }
         });
-    }
-  };
+      } else {
+        callback(false);
+      }
+    };
 
-  const clearFileUpload = async (file) => {
-    const fileReq = fileRequests.get(file);
+// abortFileUpload 함수도 콜백을 받도록 수정
+    var abortFileUpload = function(file, callback) {
+      var fileReq = fileRequests.get(file);
 
-    if (fileReq) {
-      await abortFileUpload(file);
-      fileRequests.delete(file);
-      clearDownloadProgress(encodeURI(file.name));
-      removeFileList(file);
-      return true;
-    }
+      if (fileReq && fileReq.request) {
+        fileReq.request.abort();
+        callback(true);
+      } else {
+        callback(false);
+      }
+    };
 
-    return false;
-  };
 
-  const removeFileList = (file) => {
-    const $fileUploader = document.getElementById('fileUploader');
-    const childComponent = document.getElementById(file.name.slice(25));
+  var removeFileList = function(file){
+    var $fileUploader = document.getElementById('fileUploader');
+    var childComponent = document.getElementById(file.name.slice(25));
 
     if ($fileUploader && childComponent) {
       $fileUploader.removeChild(childComponent);
     }
   }
 
-  // 업로드 현황 업데이터
-  const progressBox = document.createElement('div');
+  var progressBox = document.createElement('div');
 
   progressBox.className = 'upload-progress-tracker expanded';
   progressBox.textContent = 'Uploading...';
@@ -168,216 +225,243 @@ const uploadFiles = (() => {
 				<div class="file-progress-wrapper" style="width: 100%"></div>
 			`;
 
-  return (files, options = defaultOptions) => {
-    [...files].forEach((file) => {
-      uploadFile(file, { ...defaultOptions, ...options });
+  return function(files, options) {
+    var filesArray = [];
+    for (var i = 0; i < files.length; i++) {
+      filesArray.push(files[i]);
+    }
+
+    filesArray.forEach(function(file) {
+      uploadFile(file, options || defaultOptions);
     });
 
     return {
-      abortFileUpload,
-      // retryFileUpload,
-      resumeFileUpload,
-      clearFileUpload,
+      abortFileUpload: abortFileUpload,
+      resumeFileUpload: resumeFileUpload,
+      clearFileUpload: clearFileUpload
     };
   };
 })();
 
-const uploadAndTrackFiles = (() => {
-  const files = new Map();
-  const $progressArea = document.getElementsByClassName('progress-area')[0];
-  const progressBox = document.createElement('div');
-  let uploader = null;
+var uploadAndTrackFiles = (function() {
+  var files = {}; // Map 대신 일반 객체 사용
+  var $progressArea = document.getElementsByClassName('progress-area')[0];
+  var progressBox = document.createElement('div');
+  var uploader = null;
 
   progressBox.className = 'upload-progress-tracker expanded';
-  progressBox.innerHTML = `
-				<div class="uploads-progress-bar" style="width: 0;"></div>
-				<div class="file-progress-wrapper" style="width: 100%"></div>
-			`;
+  progressBox.innerHTML =
+      '<div class="uploads-progress-bar" style="width: 0;"></div>' +
+      '<div class="file-progress-wrapper" style="width: 100%"></div>';
 
-  const setFileElement = (file) => {
-    const fileElement = document.createElement('div');
+  var setFileElement = function(file) {
+    var fileElement = document.createElement('div');
     fileElement.className = 'file-progress';
-    fileElement.innerHTML = `
-			<div class="file-details" style="position: relative">
-				<p>
-					<span class="status">pending</span>
-					<span class="file-name">${file.name.slice(25)}</span>
-					<span class="file-ext"></span>
-				</p>
-				<div class="progress-bar" style="width: 0;"></div>
-			</div>
-			<div class="file-actions">
-				<button type="button" class="retry-btn" style="display: none">Retry</button>
-				<button type="button" class="cancel-btn" style="display: none">Pause</button>
-				<button type="button" class="resume-btn" style="display: none">Resume</button>
-				<button type="button" class="clear-btn" style="display: none">Clear</button>
-			</div>
-		`;
+    fileElement.innerHTML =
+        '<div class="file-details" style="position: relative">' +
+        '<p>' +
+        '<span class="status">pending</span>' +
+        '<span class="file-name">' + file.name.slice(25) + '</span>' +
+        '<span class="file-ext"></span>' +
+        '</p>' +
+        '<div class="progress-bar" style="width: 0;"></div>' +
+        '</div>' +
+        '<div class="file-actions">' +
+        '<button type="button" class="cancel-btn" style="display: none">Pause</button>' +
+        '<button type="button" class="resume-btn" style="display: none">Resume</button>' +
+        '<button type="button" class="clear-btn" style="display: none">Clear</button>' +
+        '</div>';
 
-    const [
-      _,
-      {
-        children: [, pauseBtn, resumeBtn, clearBtn],
-      },
-    ] = fileElement.children;
+    var fileActions = fileElement.children[1];
+    var pauseBtn = fileActions.children[0];
+    var resumeBtn = fileActions.children[1];
+    var clearBtn = fileActions.children[2];
 
-    files.set(file, {
+    files[file.name] = { // 파일 이름을 키로 사용
       element: fileElement,
       size: file.size,
       status: 'PENDING',
       percentage: 0,
       uploadedChunkSize: 0,
-    });
+    };
 
-    clearBtn.addEventListener('click', () => {
+    clearBtn.addEventListener('click', function() {
       uploader.clearFileUpload(file);
-      files.delete(file);
+      delete files[file.name];
       fileElement.remove();
     });
-    pauseBtn.addEventListener('click', () => uploader.abortFileUpload(file));
-    resumeBtn.addEventListener('click', () => uploader.resumeFileUpload(file));
+
+    pauseBtn.addEventListener('click', function() {
+      uploader.abortFileUpload(file);
+    });
+
+    resumeBtn.addEventListener('click', function() {
+      uploader.resumeFileUpload(file);
+    });
+
     progressBox.querySelector('.file-progress-wrapper').appendChild(fileElement);
 
     return fileElement;
   };
 
-  const updateFileElement = (fileObject) => {
-    const [
-      ,
-      {
-        children: [, pauseBtn, resumeBtn, clearBtn],
-      },
-    ] = fileObject.element.children;
+  function updateFileElement(fileObject) {
+    var fileElementChildren = fileObject.element.children;
 
-    const element = fileObject.element;
-    const processBar = element.getElementsByClassName('progress-bar')[0];
+    // 첫 번째 자식 요소는 건너뛰고 두 번째 자식 요소의 자식들을 가져옵니다.
+    var actionButtons = fileElementChildren[1].children;
+    var pauseBtn = actionButtons[0];
+    var resumeBtn = actionButtons[1];
+    var clearBtn = actionButtons[2];
+
+    var processBar = fileObject.element.getElementsByClassName('progress-bar')[0];
 
     processBar.style.width = fileObject.percentage + '%';
     processBar.style.background = 'green';
     pauseBtn.style.display = fileObject.status === 'UPLOADING' ? 'inline-block' : 'none';
     resumeBtn.style.display = fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
     clearBtn.style.display =
-      fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
-  };
+        fileObject.status === 'COMPLETED' || fileObject.status === 'PAUSED' ? 'inline-block' : 'none';
+  }
 
-  const onComplete = (file) => {
-    const fileObj = files.get(file.file);
+  function onComplete(file){
+    var fileObj = files.get(file.file);
 
     fileObj.status = 'COMPLETED';
     fileObj.percentage = 100;
 
     updateFileElement(fileObj);
-  };
+  }
 
-  const onProgress = (file) => {
-    const fileObj = files.get(file.file);
+  function onProgress(file){
+    var fileObj = files.get(file.file);
 
     fileObj.status = 'UPLOADING';
     fileObj.percentage = file.percentage;
 
     updateFileElement(fileObj);
-  };
+  }
 
-  const onError = (file) => {
-    const fileObj = files.get(file.file);
+  function onError(file){
+    var fileObj = files.get(file.file);
 
     fileObj.status = 'FAILED';
     fileObj.percentage = 100;
 
     updateFileElement(fileObj);
-  };
+  }
 
-  const onAbort = (file) => {
-    const fileObj = files.get(file);
+  function onAbort(file){
+    var fileObj = files.get(file);
     fileObj.status = 'PAUSED';
 
     updateFileElement(fileObj);
-  };
+  }
 
-  return (globalFileList) => {
-    for (let i = 0; i < globalFileList.length; i++) {
+  return function(globalFileList) {
+    for (var i = 0; i < globalFileList.length; i++) {
       globalFileList[i].element = setFileElement(globalFileList[i]);
     }
     $progressArea.appendChild(progressBox);
 
     uploader = uploadFiles(globalFileList, {
-      onProgress,
-      onError,
-      onAbort,
-      onComplete,
+      onProgress: onProgress,
+      onError: onError,
+      onAbort: onAbort,
+      onComplete: onComplete
     });
   };
 })();
 
-const fileInput = document.getElementsByClassName('upload-btn');
+var fileInput = document.getElementsByClassName('upload-btn');
 
-fileInput[0].addEventListener('click', (e) => {
+fileInput[0].addEventListener('click', function(e) {
   e.preventDefault();
   if (globalFileList.length === 0) {
     alert('파일을 첨부한 후 전송버튼을 눌러주세요.');
     return;
   }
 
-  async function checkSavedServerFiles(fileName) {
-    let saveFileSize = 0;
-    const url = `http://10.10.0.157:1234/upload-status?fileName=${fileName}`;
+  function checkSavedServerFiles(fileName, callback) {
+    var saveFileSize = 0;
+    var url = 'http://10.10.0.157:1234/upload-status?fileName=' + encodeURIComponent(fileName);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      saveFileSize = data.totalChunkUploaded;
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        saveFileSize = data.totalChunkUploaded;
+        callback(null, saveFileSize);
+      } else {
+        callback(new Error('Error fetching file size'));
+      }
+    };
 
-    return saveFileSize;
+    xhr.onerror = function() {
+      callback(new Error('Network error'));
+    };
+
+    xhr.send();
   }
 
-  async function checkProgressedFiles() {
-    const localStorageList = [];
-    let progressedFileString = '';
+  function checkProgressedFiles(callback) {
+    var localStorageList = [];
+    var progressedFileString = '';
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i).slice(25);
-      const value = localStorage.getItem(localStorage.key(i));
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i).slice(25);
+      var value = localStorage.getItem(localStorage.key(i));
       localStorageList.push({ key, value });
     }
 
+    var completed = 0;
+    var checkNext = function() {
+      if (completed >= globalFileList.length) {
+        callback(null, progressedFileString);
+        return;
+      }
 
-    for (let i = 0; i < globalFileList.length; i++) {
-      for (let j = 0; j < localStorageList.length; j++) {
+      var file = globalFileList[completed];
+      for (var j = 0; j < localStorageList.length; j++) {
         if (
-          globalFileList[i].name.slice(25) === localStorageList[j].key &&
-          Number(globalFileList[i].originLastModified) === Number(localStorageList[j].value.split('|')[3]) &&
-            globalFileList[i].size === Number(localStorageList[j].value.split('|')[2])
+            file.name.slice(25) === localStorageList[j].key &&
+            Number(file.originLastModified) === Number(localStorageList[j].value.split('|')[3]) &&
+            file.size === Number(localStorageList[j].value.split('|')[2])
         ) {
-          const newFileName = localStorage.key(j);
-          const newFile = new File([globalFileList[i]], newFileName, {
-            type: globalFileList[i].type,
+          var newFileName = localStorage.key(j);
+          checkSavedServerFiles(newFileName, function(error, size) {
+            if (error) {
+              console.error(error);
+              completed++;
+              checkNext();
+            } else {
+              file.startingByte = size;
+              progressedFileString += file.name.slice(25) + ' ';
+              completed++;
+              checkNext();
+            }
           });
-
-          globalFileList[i] = newFile;
-          globalFileList[i].startingByte = await checkSavedServerFiles(newFileName);
-
-          progressedFileString += globalFileList[i].name.slice(25) + ' ';
-          break;
+          return;
         }
       }
-    }
+      completed++;
+      checkNext();
+    };
 
-    if (progressedFileString.length !== 0) {
-      alert(`${progressedFileString} 파일은 이전에 업로드가 진행되었던 파일입니다. 이어서 업로드를 진행합니다.`);
-    }
+    checkNext();
   }
 
-  checkProgressedFiles()
-    .then(() => {
+  checkProgressedFiles(function(error, progressedFileString) {
+    if (error) {
+      console.error(error);
+    } else {
+      if (progressedFileString.length !== 0) {
+        alert(progressedFileString + ' 파일은 이전에 업로드가 진행되었던 파일입니다. 이어서 업로드를 진행합니다.');
+      }
       uploadAndTrackFiles(globalFileList);
       globalFileList.length = 0;
-    })
-    .catch((e) => {
-      console.log('error', e);
-    });
+    }
+  });
 });
 
 
@@ -387,23 +471,35 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function createUploadedFileList() {
-  const $downloadList = document.getElementsByClassName('download-list-area')[0];
+  var $downloadList = document.getElementsByClassName('download-list-area')[0];
   $downloadList.innerHTML = '';
 
-  fetch('http://10.10.0.157:1234/files')
-  .then((response) => response.json())
-  .then((files) => {
-    for (let i = 0; i < files.length; i++) {
-      $downloadList.appendChild(createListElement(files[i]));
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://10.10.0.157:1234/files', true);
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var files = JSON.parse(xhr.responseText);
+      for (var i = 0; i < files.length; i++) {
+        $downloadList.appendChild(createListElement(files[i]));
+      }
+    } else {
+      console.error('Error fetching files:', xhr.statusText);
     }
-  })
-  .catch((error) => console.error('Error fetching files:', error));
+  };
+
+  xhr.onerror = function() {
+    console.error('Network error');
+  };
+
+  xhr.send();
 }
 
+
 function createListElement(file) {
-  const ul = document.createElement('ul');
-  const li = document.createElement('li');
-  const convertFileName = file.slice(25);
+  var ul = document.createElement('ul');
+  var li = document.createElement('li');
+  var convertFileName = file.slice(25);
 
   li.className = 'list-group-item d-flex justify-content-between align-items-center';
   li.innerHTML = `
@@ -416,35 +512,55 @@ function createListElement(file) {
   return ul;
 }
 
-document.getElementsByClassName('download-btn')[0].addEventListener('click', (e) => {
-  return fetch('http://10.10.0.157:1234/download', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      fileList: getCheckedFileList(),
-    }),
-  })
-    .then((response) => response.blob())
-    .then((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
+document.getElementsByClassName('download-btn')[0].addEventListener('click', function(e) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://10.10.0.157:1234/download', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.responseType = 'blob';
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var blob = xhr.response;
+      var url = window.URL || window.webkitURL;
+      var downloadUrl = url.createObjectURL(blob);
+      var a = document.createElement('a');
+
+      a.href = downloadUrl;
       a.download = 'files.zip';
       document.body.appendChild(a);
       a.click();
+
+      // 필요에 따라 setTimeout을 사용하여 URL을 해제
+      setTimeout(function() {
+        URL.revokeObjectURL(downloadUrl);
+      }, 100); // 100ms 후에 URL 해제
+
       a.remove();
-    })
-    .catch((error) => console.error('Error fetching files:', error));
+    } else {
+      console.error('Error fetching files:', xhr.statusText);
+    }
+  };
+
+  xhr.onerror = function() {
+    console.error('Network error');
+  };
+
+  var data = JSON.stringify({
+    fileList: getCheckedFileList()
+  });
+  xhr.send(data);
 });
 
-const getCheckedFileList = () => {
-  const checkboxes = document.querySelectorAll(".download-list-area input[type='checkbox']");
-  const checked = Array.from(checkboxes).filter((checkbox) => checkbox.checked);
-
-  return checked.map((checkbox) => checkbox.id);
-};
+function getCheckedFileList() {
+  var checkboxes = document.querySelectorAll(".download-list-area input[type='checkbox']");
+  var checked = [];
+  for (var i = 0; i < checkboxes.length; i++) {
+    if (checkboxes[i].checked) {
+      checked.push(checkboxes[i].id);
+    }
+  }
+  return checked;
+}
 
 // 이어올리기 로컬스토리지
 function setDownloadProgress(fileName, bytesDownloaded) {
