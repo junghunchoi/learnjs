@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="DEXT_fiVe_UP_uploadbox">
+      <div class="DEXT_fiVe_UP_uploadbox_tit">
+        <ul style="">
+          <li style="height: 24px; padding-top: 4px; display: block" class="input_chk">
+            <input style="" type="checkbox" id="chk_all_box" name="" title="전체 선택" /><em></em
+            ><label id="chk_all_box_label" for="chk_all_box" class="blind">전체 선택</label>
+          </li>
+          <li
+            id="header_bar_file_name"
+            style="height: 24px; padding-top: 4px; margin-left: 0; padding-left: 35px"
+            class="fname dext5_ko-kr"
+          >
+            파일 이름<span style="display: none; width: 95%" class="btn_sort"><em class="icon_up"></em></span>
+          </li>
+          <li
+            id="header_bar_file_size"
+            style="right: 0px; height: 24px; padding-top: 4px; display: block"
+            class="fsize dext5_ko-kr"
+          >
+            파일 크기<span style="display: none" class="btn_sort"><em class="icon_up"></em></span>
+          </li>
+          <li class="user_header_box" style="display: none"></li>
+          <li id="header_bar_rt" class="header_rt_type">&nbsp;</li>
+        </ul>
+      </div>
+      <div class="DEXT_fiVe_UP_uploadbox_sec" id="DEXT_fiVe_UP_PL_holder">
+        <div id="DEXT_fiVe_UP_Load" class="DEXT_fiVe_UP_file_load_box" style="display: none">
+          <div class="DEXT_fiVe_UP_file_load"></div>
+          <span class="DEXT_fiVe_UP_file_loadty"
+            ><img src="https://www.dext5.com/dext5upload/images/loading.gif" alt="loading image"
+          /></span>
+        </div>
+        <p id="file_temp" class="txt dext5_ko-kr" style="display: none">
+          이곳을 <span>더블 클릭</span> 또는 <span>파일을 드래그</span>하세요.
+        </p>
+        <div
+          id="DEXT_fiVe_UP_file_temp"
+          class="DEXT_fiVe_UP_uploadbox_txt"
+          style="position: relative; overflow-y: scroll; overflow-x: auto; height: 91px"
+        >
+          <ol id="file_list" class="lst_line_none">
+            <li>
+              <ul class="border_none" style="" dext5customdata_fileitem="">
+                <li class="input_chk">
+                  <input
+                    id="chk_file_0"
+                    style=""
+                    type="checkbox"
+                    listvalue="0"
+                    title="100mb"
+                    value="true"
+                    dext_select="1"
+                  /><label id="chk_file_label_0" for="chk_file_0" class="blind">개별 파일 선택</label>
+                </li>
+                <li class="fname" style="width: 625.9861450195312px">
+                  <img src="https://www.dext5.com/dext5upload/images/etc.png" alt="" style="" /><span
+                    title="100mb"
+                    style="
+                      background-color: rgb(51, 153, 255);
+                      color: rgb(255, 255, 255);
+                      border-top: 1px dotted rgb(0, 0, 0);
+                      border-bottom: 1px dotted rgb(0, 0, 0);
+                      border-left: 1px dotted rgb(0, 0, 0);
+                      padding: 3px 0px 0px 3px;
+                      height: 16px;
+                      line-height: 16px;
+                    "
+                    >100mb</span
+                  >
+                </li>
+                <li
+                  class="fsize"
+                  style="
+                    display: block;
+                    right: 0px;
+                    background-color: rgb(51, 153, 255);
+                    color: rgb(255, 255, 255);
+                    border-width: 1px 1px 1px 0px;
+                    border-top-style: dotted;
+                    border-bottom-style: dotted;
+                    border-right-style: dotted;
+                    border-top-color: rgb(0, 0, 0);
+                    border-bottom-color: rgb(0, 0, 0);
+                    border-right-color: rgb(0, 0, 0);
+                    padding-top: 0px;
+                    padding-right: 4px;
+                    height: 19px;
+                    line-height: 19px;
+                  "
+                >
+                  <span name="DEXT_fiVe_UP_fsize" title="99.05 MB">99.05 MB</span>
+                </li>
+                <li
+                  class="user_header_box"
+                  style="
+                    display: none;
+                    color: rgb(255, 255, 255);
+                    background-color: rgb(51, 153, 255);
+                    padding-left: 3px;
+                  "
+                ></li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+      </div>
+      <div class="DEXT_fiVe_UP_info_area">
+        <ul>
+          <li id="basic_file_info" class="basic_file_info dext5_ko-kr" style=""></li>
+          <li class="contents_file_info" id="current_file_info" style="">
+            <span id="total_num" class="dext5_ko-kr">1</span> 개,
+            <span id="total_size" class="dext5_ko-kr">99.05 MB</span>
+            <span id="file_inserted_text" class="dext5_ko-kr"></span>
+          </li>
+        </ul>
+      </div>
+      <div id="DEXT_fiVe_UP_uploadbox_btm" style="" class="DEXT_fiVe_UP_uploadbox_btm"><ul class="DEXT_fiVe_UP_uploadbox_left"><li class="fbutton"><button type="button" id="button_open" value="열기" class="input_image dext5_ko-kr" onclick="openFile(event);" style="; ">열기</button> <button type="button" id="button_download" value="다운로드" class="input_image dext5_ko-kr" onclick="downloadFile(event);" style="; ">다운로드</button> <button type="button" id="button_download_all" value="전체 다운로드" class="input_image dext5_ko-kr" style="width:105px;; " onclick="downloadAllFile(event);">전체 다운로드</button> </li></ul></div>
+    </div>
+  </body>
+</html>
