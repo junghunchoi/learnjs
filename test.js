@@ -1,10 +1,36 @@
-function loadScript(src, callback) {
-    let script = document.createElement('script');
-    script.src = src;
-    //로딩에 성공하면 이걸 로드
-    script.onload = () => callback(null, script);
-    //로딩에 실패하면 이걸 로드
-    script.onerror = () => callback(new Error(`Script load error for ${src}`));
+class tMap {
+  constructor(props) {
+    this.map = {};
+  }
 
-    document.head.append(script);
+  get size() {
+    return this.map.length();
+  }
+
+  set(key, value) {
+    map[key] = value;
+  }
+
+  get(key) {
+    return this.map[key];
+  }
+
+  has(key) {
+    return this.map[key] !== null;
+  }
+
+  delete(key) {
+    return delete this.map[key]
+  }
+
+  clear() {
+    this.map = {}
+  }
+
+  forEach(callback) {
+    for (const key in this.map) {
+      callback(this.map[key],key)
+    }
+  }
+
 }
