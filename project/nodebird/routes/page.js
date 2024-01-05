@@ -1,24 +1,25 @@
 const express = require('express');
-const {isLoggedIn, isNotLoggedIn} = require('../middlewares');
-const {renderProfile, renderJoin, renderMain} = require('../controller/page');
+const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
+const {
+    renderProfile, renderJoin, renderMain, renderHashtag,
+} = require('../controllers/page');
 
 const router = express.Router();
 
-// 공통으로 사용할 경우 res.locals를 사용한다.
 router.use((req, res, next) => {
     res.locals.user = req.user;
-    res.locals.followerCount = 0;
-    res.locals.followingCount = 0;
-    res.locals.followerIdList = [];
+    res.locals.followerCount = req.user?.Followers?.length || 0;
+    res.locals.followingCount = req.user?.Followings?.length || 0;
+    res.locals.followingIdList = req.user?.Followings?.map(f => f.id) || [];
     next();
 });
 
-// 라우터의 미들웨어를 다른 곳에서 불러오고 있다.
-//아래와 같이 라우터 마지막에 위치해 클라이언트에 응답을 보내는 미들웨어를 컨트롤러한다.
-router.get('/profile', renderProfile);
-router.get('/join', renderJoin);
+router.get('/profile', isLoggedIn, renderProfile);
+
+router.get('/join', isNotLoggedIn, renderJoin);
+
 router.get('/', renderMain);
 
-router.get('/profile', isLoggedIn, renderProfile);
-router.get('/join', isNotLoggedIn, renderJoin);
+router.get('/hashtag', renderHashtag);
+
 module.exports = router;
